@@ -1,0 +1,33 @@
+{
+  "middleSolutions": [
+    {
+      "final_order": 3,
+      "word": "click"
+    },
+    {
+      "final_order": 1,
+      "word": "cling"
+    },
+    {
+      "final_order": 2,
+      "word": "clink"
+    },
+    {
+      "final_order": 0,
+      "word": "sling"
+    },
+    {
+      "final_order": 4,
+      "word": "cluck"
+    }
+  ],
+  "rearrangedChain": [
+    "fling",
+    "sling",
+    "cling",
+    "clink",
+    "click",
+    "cluck",
+    "chuck"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "linkedin-solver",
+  "version": "1.0.0",
+  "description": "Solves LinkedIn Games puzzles",
+  "main": "index.js",
+  "scripts": {
+    "start:queens": "node bot_queens.js",
+    "start:zip": "node bot_zip.js",
+    "start:tango": "node bot_tango.js",
+    "start:pinpoint": "node bot_pinpoint.js",
+    "start:pinpoint:stored": "node bot_pinpoint.js --stored-solution",
+    "start:pinpoint:get": "node bot_pinpoint.js --get-solution",
+    "start:crossclimb": "node bot_crossclimb.js",
+    "start:crossclimb:stored": "node bot_crossclimb.js --stored-solution",
+    "start:crossclimb:get": "node bot_crossclimb.js --get-solution"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "dotenv": "^16.5.0",
+    "openai": "^4.103.0",
+    "playwright": "^1.42.1"
+  }
+}

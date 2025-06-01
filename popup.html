@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LinkedIn Puzzle Solver</title>
+  <style>
+    body {
+      width: 280px;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .header h2 {
+      margin: 8px 0;
+    }
+    .cancel-button {
+      width: 60px;
+      height: 24px;
+      background-color: #ffebee;
+      border: 1px solid #495057;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #495057;
+      font-size: 14px;
+      font-weight: bold;
+      transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+    }
+    .cancel-button:hover:not(:disabled) {
+      background-color: #ffcdd2;
+      border-color: #495057;
+    }
+    .cancel-button:disabled {
+      background-color: #ffebee;
+      opacity: 0.7;
+      border-color: #ccc;
+    }
+    .cancel-button.solving {
+      background-color: #ffcdd2;
+    }
+    .primary-button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background-color: #0077b5;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s ease, opacity 0.2s ease;
+    }
+    .primary-button:hover:not(:disabled) {
+      background-color: #005582;
+    }
+    .primary-button:disabled {
+      background-color: #cccccc;
+      color: #666666;
+      opacity: 0.7;
+    }
+    .primary-button.api-key-required:disabled::after {
+      content: " (API Key Required)";
+      font-size: 0.9em;
+      font-style: italic;
+      color: #666666;
+    }
+    .primary-button.solving {
+      background-color: #cccccc;
+      color: #666666;
+      opacity: 0.7;
+    }
+    #status {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 4px;
+      text-align: center;
+      min-height: 30px;
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ready {
+      min-height: 20px;
+      color: #495057;
+    }
+    .solving {
+      color: #495057;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .small-button {
+      width: auto;
+      padding: 8px 8px;
+      margin: 0 5px;
+      font-size: 12px;
+      background-color: #0077b5;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      display: inline-block;
+    }
+    .small-button:hover {
+      background-color: #005582;
+    }
+    .small-link {
+      width: auto;
+      padding: 8px 12px;
+      margin: 0 5px;
+      font-size: 12px;
+      background-color: #0077b5;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      display: inline-block;
+      text-decoration: none;
+      text-align: center;
+      transition: background-color 0.2s ease;
+    }
+    .small-link:hover {
+      background-color: #005582;
+    }
+    .loading-spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #0077b5;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .game-tag {
+      font-size: 12px;
+      color: #666;
+    }
+    .game-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .game-info-container {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .solving-status {
+      font-size: 12px;
+      color: #dc3545;
+      display: none;
+    }
+    /* Game-specific controls */
+    .game-controls {
+      display: none;
+      margin-top: 10px;
+    }
+    .api-key-section {
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      display: none;
+      background-color: #f8f9fa;
+    }
+    .api-key-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      padding: 5px 0;
+    }
+    .api-key-header:hover {
+      color: #0077b5;
+    }
+    .api-key-header span:last-child {
+      font-size: 20px;
+      line-height: 1;
+      margin-left: 5px;
+    }
+    .api-key-content {
+      display: none;
+      margin-top: 10px;
+    }
+    .api-key-content.expanded {
+      display: block;
+    }
+    .api-key-actions {
+      display: flex;
+      gap: 5px;
+      margin-top: 5px;
+    }
+    .api-key-actions button {
+      flex: 1;
+    }
+    #apiKeyInput {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .delete-key-btn {
+      background-color: #dc3545;
+    }
+    .delete-key-btn:hover:not(:disabled) {
+      background-color: #c82333;
+    }
+    /* Kebab Menu Styles */
+    .kebab-button {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      color: black;
+      border: 1px solid #ccc;
+      background-color: #f8f9fa;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .kebab-button:hover {
+      background-color: #dadadb;
+      border: 1px solid #495057;
+    }
+    /* Modal Menu */
+    .modal-menu {
+      display: none;
+      position: absolute;
+      top: 56px;
+      right: 18px;
+      width: 180px;
+      background-color: white;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 1000;
+    }
+    .modal-menu.visible {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      cursor: pointer;
+      position: relative;
+    }
+    .menu-item:not(:last-child) span::after {
+      font-size: 14px;
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background-color: #e9ecef;
+    }
+    .menu-item:hover {
+      background-color: #f8f9fa;
+    }
+    .menu-item:first-child:hover {
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+    .menu-item:last-child:hover {
+      border-bottom-left-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+    .menu-item p {
+      margin: 0;
+      width: 20px;
+      text-align: center;
+      color: #495057;
+    }
+    .menu-item span {
+      flex-grow: 1;
+      margin-left: 12px;
+      color: #495057;
+    }
+    /* Content Sections */
+    .content-section {
+      display: none;
+      padding: 15px;
+      position: relative;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      background-color: #f8f9fa;
+    }
+    .content-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .content-header h3 {
+      margin: 0;
+    }
+    .close-button {
+      width: 24px;
+      height: 24px;
+      background-color: #f8f9fa;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: black;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .close-button:hover {
+      background-color: #dadadb;
+      border: 1px solid #495057;
+    }
+    .close-button p {
+      margin: 0;
+      line-height: 1;
+    }
+    .game-links {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    /* Icons */
+    .icon {
+      font-family: "Material Icons";
+      font-size: 20px;
+      color: #495057;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+  <div class="header">
+    <h2>LinkedIn Puzzle Solver</h2>
+    <button class="kebab-button" id="kebabButton">
+      <p class="material-icons">more_vert</p>
+    </button>
+  </div>
+
+  <!-- Modal Menu -->
+  <div class="modal-menu" id="modalMenu">
+    <div class="menu-item" data-section="about">
+      <p class="material-icons">info</p>
+      <span>About</span>
+    </div>
+    <div class="menu-item" data-section="steps">
+      <p class="material-icons">list</p>
+      <span>Steps</span>
+    </div>
+    <div class="menu-item" data-section="links">
+      <p class="material-icons">link</p>
+      <span>Links</span>
+    </div>
+  </div>
+
+  <!-- Content Sections -->
+  <div class="content-section" id="aboutSection">
+    <div class="content-header">
+      <h3>About</h3>
+      <button class="close-button" data-section="about">
+        <p class="material-icons">close</p>
+      </button>
+    </div>
+    <p>Can solve any LinkedIn puzzle game using solver algorithms or AI. Can save scores to LinkedIn account</p>
+  </div>
+
+  <div class="content-section" id="stepsSection">
+    <div class="content-header">
+      <h3>Use on LinkedIn</h3>
+      <button class="close-button" data-section="steps">
+        <p class="material-icons">close</p>
+      </button>
+    </div>
+    <p>Multiple steps are needed to have scores officially saved on your LinkedIn profile.</p>
+    <ol>
+      <li>Logged out of LinkedIn</li>
+      <li>Navigate to a valid puzzle link</li>
+      <li>Solve puzzle (may require multiple attempts and/or an API key)</li>
+      <li>Input direct solution if needed</li>
+      <li>Log in to save</li>
+      <li>Repeat the process for each puzzle</li>
+    </ol>
+  </div>
+
+  <div class="content-section" id="linksSection">
+    <div class="content-header">
+      <h3>Puzzle Links</h3>
+      <button class="close-button" data-section="links">
+        <p class="material-icons">close</p>
+      </button>
+    </div>
+    <p>Solver uses alternative puzzle links</p>
+    <div class="game-links">
+      <a href="https://www.linkedin.com/games/view/queens/desktop/" target="_blank" class="small-link">Queens</a>
+      <a href="https://www.linkedin.com/games/view/zip/desktop/" target="_blank" class="small-link">Zip</a>
+      <a href="https://www.linkedin.com/games/view/tango/desktop/" target="_blank" class="small-link">Tango</a>
+      <a href="https://www.linkedin.com/games/view/pinpoint/desktop/" target="_blank" class="small-link">Pinpoint</a>
+      <a href="https://www.linkedin.com/games/view/crossclimb/desktop/" target="_blank" class="small-link">Crossclimb</a>
+    </div>
+  </div>
+
+  <div class="game-info-container">
+    <div class="game-info">
+      <div id="gameTag" class="game-tag">Game detected: ...</div>
+      <div id="solvingStatus" class="solving-status"></div>
+    </div>
+    <button class="cancel-button" id="cancelButton" disabled>Cancel</button>
+  </div>
+  <button class="primary-button" id="solveButton">Solve Puzzle</button>
+  
+  <!-- Game-specific controls -->
+  <div id="pinpointControls" class="game-controls">
+    <button class="primary-button" id="solvePinpoint">Solve Puzzle</button>
+    <button class="primary-button" id="inputStoredPinpoint">Input Stored Solution</button>
+  </div>
+
+  <!-- Crossclimb controls -->
+  <div id="crossclimbControls" class="game-controls">
+    <button class="primary-button" id="solveCrossclimb">Solve Puzzle</button>
+    <button class="primary-button" id="inputStoredCrossclimb">Input Stored Solution</button>
+  </div>
+
+  <!-- API Key Section -->
+  <div class="api-key-section" id="apiKeySection">
+    <div class="api-key-header" id="apiKeyHeader">
+      <span>OpenAI API Key</span>
+      <span>&#9656;</span>
+    </div>
+    <div class="api-key-content" id="apiKeyContent">
+      <input type="password" id="apiKeyInput" placeholder="Enter OpenAI API Key">
+      <div class="api-key-actions">
+        <button class="primary-button" id="saveApiKey">Save Key</button>
+        <button class="primary-button delete-key-btn" id="deleteApiKey">Delete Key</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="status" class="ready">Ready</div>
+  <script src="popup.js"></script>
+</body>
+</html> 

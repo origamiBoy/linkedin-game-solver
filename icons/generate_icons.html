@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Browser Icons</title>
+    <style>
+        .preview-container {
+            margin: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .preview-item {
+            text-align: center;
+        }
+        .preview-item img {
+            border: 1px solid #ccc;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Browser Icon Generator</h1>
+    <div id="preview" class="preview-container"></div>
+    <canvas id="canvas" width="128" height="128" style="display:none;"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const previewContainer = document.getElementById('preview');
+        
+        // Load PNG
+        const img = new Image();
+        img.onload = function() {
+            // Draw at original size
+            ctx.drawImage(img, 0, 0, 128, 128);
+            
+            // Generate and preview icons
+            const sizes = [16, 48, 128];
+            sizes.forEach(size => {
+                const iconCanvas = document.createElement('canvas');
+                iconCanvas.width = size;
+                iconCanvas.height = size;
+                const iconCtx = iconCanvas.getContext('2d');
+                iconCtx.drawImage(canvas, 0, 0, size, size);
+                
+                // Create preview
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item';
+                
+                const previewImg = document.createElement('img');
+                previewImg.src = iconCanvas.toDataURL('image/png');
+                previewImg.width = size;
+                previewImg.height = size;
+                
+                const label = document.createElement('div');
+                label.textContent = `${size}x${size}`;
+                
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = 'Download';
+                downloadBtn.onclick = () => downloadIcon(iconCanvas, `icon${size}.png`);
+                
+                previewItem.appendChild(previewImg);
+                previewItem.appendChild(label);
+                previewItem.appendChild(downloadBtn);
+                previewContainer.appendChild(previewItem);
+            });
+        };
+        
+        img.onerror = function() {
+            alert('Error loading the icon image. Please make sure icon.png exists in the same directory.');
+        };
+        
+        img.src = 'icon.png';
+        
+        function downloadIcon(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html> 
