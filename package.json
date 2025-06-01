@@ -1,5 +1,5 @@
 {
-  "name": "linkedin-solver",
+  "name": "linkedin-game-solver",
   "version": "1.0.0",
   "description": "Solves LinkedIn Games puzzles",
   "main": "index.js",

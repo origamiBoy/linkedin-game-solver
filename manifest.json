@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "LinkedIn Solver",
+  "name": "LinkedIn Game Solver",
   "version": "1.0",
   "description": "Solves LinkedIn Games puzzles",
   "permissions": [
