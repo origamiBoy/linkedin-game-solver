@@ -68,7 +68,7 @@ class CrossclimbSolver {
         this.browser = null;
         this.page = null;
         this.middleClues = [];
-        this.solutionsFile = path.join(__dirname, 'crossclimb_solutions.json');
+        this.solutionsFile = path.join(__dirname, 'solutions', 'crossclimb_solutions.json');
     }
 
     async initialize() {

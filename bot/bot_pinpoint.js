@@ -25,7 +25,7 @@ class PinpointSolver {
         this.getDirectSolution = false;
         this.templateSolution = "placeholder";
         this.currentAttempt = 0;
-        this.solutionsFile = path.join(__dirname, 'pinpoint_solutions.json');
+        this.solutionsFile = path.join(__dirname, 'solutions', 'pinpoint_solutions.json');
     }
 
     async initialize() {

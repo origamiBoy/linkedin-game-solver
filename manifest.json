@@ -14,7 +14,7 @@
     "https://api.openai.com/*"
   ],
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "browser/popup/popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
@@ -22,28 +22,28 @@
     }
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "browser/popup/background.js"
   },
   "content_scripts": [
     {
       "matches": ["https://www.linkedin.com/games/view/queens/desktop/*", "https://www.linkedin.com/games/queens/*"],
-      "js": ["browser_queens.js"]
+      "js": ["browser/js/browser_queens.js"]
     },
     {
       "matches": ["https://www.linkedin.com/games/view/zip/desktop/*", "https://www.linkedin.com/games/zip/*"],
-      "js": ["browser_zip.js"]
+      "js": ["browser/js/browser_zip.js"]
     },
     {
       "matches": ["https://www.linkedin.com/games/view/tango/desktop/*", "https://www.linkedin.com/games/tango/*"],
-      "js": ["browser_tango.js"]
+      "js": ["browser/js/browser_tango.js"]
     },
     {
       "matches": ["https://www.linkedin.com/games/view/pinpoint/desktop/*", "https://www.linkedin.com/games/pinpoint/*"],
-      "js": ["browser_pinpoint.js"]
+      "js": ["browser/js/browser_pinpoint.js"]
     },
     {
       "matches": ["https://www.linkedin.com/games/view/crossclimb/desktop/*", "https://www.linkedin.com/games/crossclimb/*"],
-      "js": ["browser_crossclimb.js"]
+      "js": ["browser/js/browser_crossclimb.js"]
     }
   ],
   "icons": {
