@@ -1,6 +1,6 @@
 # LinkedIn Solver
 
-A collection of automated solvers for all of the LinkedIn games including Queens, Pinpoint, Crossclimb, Tango, and Zip. There are two versions for each solver, stand alone browser automation scripts using Playwright, and a browser extention using HTML, CSS, and JS. Used OpenAI's GPT for puzzle solving where applicable.
+A collection of automated solvers for all of the LinkedIn games including Queens, Pinpoint, Crossclimb, Tango, and Zip. There are two versions for each solver, a browser extention using HTML, CSS, and JS, and stand alone browser automation scripts using Playwright. Used OpenAI for puzzle solving where applicable.
 
 ## Features
 
@@ -21,8 +21,8 @@ A collection of automated solvers for all of the LinkedIn games including Queens
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/linkedin-solver.git
-cd linkedin-solver
+git clone https://github.com/origamiBoy/linkedin-game-solver.git
+cd linkedin-game-solver
 ```
 
 2. Install dependencies:
@@ -35,7 +35,16 @@ npm install
 OPENAI_API_KEY=your_api_key_here
 ```
 
-## Usage
+## Browser Extension
+
+The project also includes a Chrome extension that can be used to solve puzzles directly in the browser. To use the extension:
+
+1. Open Chrome and go to `chrome://extensions/`
+2. Enable "Developer mode"
+3. Click "Load unpacked" and select the project directory
+4. The extension icon will appear in your browser toolbar
+
+## Script Usage
 
 Each puzzle solver can be run using npm scripts:
 
@@ -62,7 +71,7 @@ npm run start:pinpoint:get
 # Use stored solution
 npm run start:pinpoint:stored
 
-# Default solver
+# Default solver (Get)
 npm run start:pinpoint
 ```
 
@@ -74,7 +83,7 @@ npm run start:crossclimb:get
 # Use stored solution
 npm run start:crossclimb:stored
 
-# Default solver
+# Default solver (Get)
 npm run start:crossclimb
 ```
 
@@ -86,25 +95,16 @@ npm run start:crossclimb
 - Automatically clicks appropriate cells to input solution
 
 ### Pinpoint/Crossclimb Solvers
-- Uses GPT to analyze and solve word-based puzzles
+- Uses OpenAI to analyze and solve word-based puzzles
 - Implements multiple attempts with different strategies
 - Stores successful solutions for future use
 - Can use stored solutions to quickly solve repeated puzzles
 
-## Browser Extension
-
-The project also includes a Chrome extension that can be used to solve puzzles directly in the browser. To use the extension:
-
-1. Open Chrome and go to `chrome://extensions/`
-2. Enable "Developer mode"
-3. Click "Load unpacked" and select the project directory
-4. The extension icon will appear in your browser toolbar
-
 ## Notes
 
 - All solvers run in non-headless mode for visibility
-- GPT-based solvers require an OpenAI API key
-- Solutions are cached in JSON files for future use
+- OpenAI-based solvers require an OpenAI API key
+- Script solutions are cached in JSON files for future use
 - The extension version provides a more user-friendly interface
 
 ## Contributing
