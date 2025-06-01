@@ -1,6 +1,6 @@
 # LinkedIn Solver
 
-A collection of automated solvers for all of the LinkedIn games including Queens, Pinpoint, Crossclimb, Tango, and Zip. There are two versions for each solver, standalone browser automation scripts using Playwright, and a browser extention using HTML, CSS, and JS. Used OpenAI's GPT for puzzle solving where applicable.
+A collection of automated solvers for all of the LinkedIn games including Queens, Pinpoint, Crossclimb, Tango, and Zip. There are two versions for each solver, stand alone browser automation scripts using Playwright, and a browser extention using HTML, CSS, and JS. Used OpenAI's GPT for puzzle solving where applicable.
 
 ## Features
 
