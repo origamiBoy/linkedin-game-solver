@@ -277,8 +277,7 @@ class PinpointSolver {
             console.log('Correct solution inputted:', storedSolution.solution);
             return {
                 success: true,
-                solution: storedSolution.solution,
-                timestamp: storedSolution.timestamp
+                solution: storedSolution.solution
             };
         } else {
             console.log('Stored solution is no longer correct');
@@ -292,8 +291,7 @@ class PinpointSolver {
     saveSolution(solution) {
         try {
             const solutionData = {
-                solution: solution,
-                timestamp: new Date().toISOString()
+                solution: solution
             };
 
             fs.writeFileSync(this.solutionsFile, JSON.stringify(solutionData, null, 2));
