@@ -187,7 +187,7 @@ class ZipSolver {
     }
 
     solvePuzzle() {
-        if (this.shouldStop) return null; // Check for stop at start of solve
+        if (this.shouldStop) return null;
 
         // Find all number cells and sort them
         const numberCells = [];
@@ -300,7 +300,7 @@ class ZipSolver {
 
         // DFS function to expand path
         const expandPath = () => {
-            if (this.shouldStop) return false; // Check for stop at start of DFS
+            if (this.shouldStop) return false;
 
             // If we've reached the next number
             const [currentRow, currentCol] = state.path[state.path.length - 1];
@@ -337,6 +337,8 @@ class ZipSolver {
                 .sort((a, b) => a.distance - b.distance);
 
             for (const move of moves) {
+
+                if (this.shouldStop) return false;
                 // Save state before trying this expansion
                 const savedState = saveState();
 
@@ -365,7 +367,7 @@ class ZipSolver {
     }
 
     async inputSolution(solution) {
-        if (this.shouldStop) return false; // Check for stop at start of input
+        if (this.shouldStop) return false;
 
         // Minimize solution path by removing unnecessary intermediate cells
         const minimizedSolution = [];
@@ -393,7 +395,7 @@ class ZipSolver {
 
         // Click cells to place path
         for (const [row, col] of minimizedSolution) {
-            if (this.shouldStop) return false; // Check for stop before each cell placement
+            if (this.shouldStop) return false;
 
             const cell = document.querySelector(`.trail-grid .trail-cell:nth-child(${row * BOARD_SIZE + col + 1})`);
 
@@ -414,9 +416,9 @@ class ZipSolver {
             // Wait between cells
             await new Promise(resolve => setTimeout(resolve, 10));
 
-            if (this.shouldStop) return false; // Check for stop after each cell placement
+            if (this.shouldStop) return false;
         }
-
+        if (this.shouldStop) return false;
         return true;
     }
 }

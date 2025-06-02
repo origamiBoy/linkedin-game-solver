@@ -276,7 +276,7 @@ class TangoSolver {
 
     // Solve the puzzle using DFS
     solvePuzzle() {
-        if (this.shouldStop) return null; // Check for stop at start of solve
+        if (this.shouldStop) return null;
 
         const emptyCells = [];
         for (let row = 0; row < BOARD_SIZE; row++) {
@@ -298,7 +298,7 @@ class TangoSolver {
         let attempts = 0;
 
         const dfs = (index) => {
-            if (this.shouldStop) return false; // Check for stop at start of DFS
+            if (this.shouldStop) return false;
 
             attempts++;
             if (index === emptyCells.length) {
@@ -341,7 +341,7 @@ class TangoSolver {
     }
 
     async inputSolution(solution) {
-        if (this.shouldStop) return false; // Check for stop at start of input
+        if (this.shouldStop) return false;
 
         if (!solution || solution.length === 0) {
             return true;
@@ -368,7 +368,7 @@ class TangoSolver {
 
         // Click cells to place symbols in order
         for (const [row, col, symbol] of newPlacements) {
-            if (this.shouldStop) return false; // Check for stop before each placement
+            if (this.shouldStop) return false;
 
             const cell = document.querySelector(`#lotka-cell-${row * BOARD_SIZE + col}`);
             if (cell) {

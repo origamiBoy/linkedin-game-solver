@@ -79,9 +79,7 @@ class PinpointSolver {
                 //const solution = `test${previousSolutions.length}`;
                 return solution;
             } catch (error) {
-                if (attempt === this.openaiAttempts - 1) {
-                    return false;
-                }
+                return false;
             }
         }
         // maximum openai attempts reached, continue current attempt until end of clues and forcefully parse the solution

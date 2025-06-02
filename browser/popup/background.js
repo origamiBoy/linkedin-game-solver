@@ -161,6 +161,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 state.hasApiKey = false;
                 state.statusMessage = 'API key deleted';
                 state.statusType = 'success';
+                await chrome.storage.local.remove('openaiApiKey');
+                await persistState();
                 updatePopupState();
                 sendResponse({ success: true });
                 return;
@@ -171,6 +173,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 state.hasApiKey = true;
                 state.statusMessage = 'API key saved successfully!';
                 state.statusType = 'success';
+                await chrome.storage.local.set({ 'openaiApiKey': request.apiKey });
+                await persistState();
                 updatePopupState();
                 sendResponse({ success: true });
                 return;

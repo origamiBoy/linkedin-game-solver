@@ -216,7 +216,7 @@ class QueensSolver {
     solvePuzzle() {
         const stack = [];
         const solution = [];
-        this.shouldStop = false; // Reset stop flag at start
+        if (this.shouldStop) return false;
 
         // First, mark invalid tiles for existing queens
         for (let i = 0; i < BOARD_SIZE; i++) {
@@ -248,7 +248,7 @@ class QueensSolver {
 
         // DFS implementation
         const dfs = (spots) => {
-            if (this.shouldStop) return false; // Check for stop at start of DFS
+            if (this.shouldStop) return false;
 
             // Count current queens on the board
             const queenCount = this.simulatedGameState.reduce((count, row) =>
@@ -292,6 +292,7 @@ class QueensSolver {
             });
 
             for (let i = 0; i < spots.length; i++) {
+                if (this.shouldStop) return false;
                 const [row, col] = spots[i];
                 if (this.isValidQueenPlacement(this.simulatedGameState, row, col)) {
                     // Save current state
@@ -326,7 +327,7 @@ class QueensSolver {
     }
 
     async inputSolution(solution) {
-        if (this.shouldStop) return false; // Check for stop at start of input
+        if (this.shouldStop) return false;
 
         try {
             // Find only new queen placements
@@ -336,7 +337,7 @@ class QueensSolver {
 
             // Click cells to place queens
             for (const [row, col] of newQueens) {
-                if (this.shouldStop) return false; // Check for stop before each queen placement
+                if (this.shouldStop) return false;
 
                 const cell = document.querySelector(`#queens-grid .queens-cell-with-border:nth-child(${row * BOARD_SIZE + col + 1})`);
 
@@ -365,10 +366,8 @@ class QueensSolver {
 
                 // Wait between cells
                 await new Promise(resolve => setTimeout(resolve, 10));
-
-
             }
-
+            if (this.shouldStop) return false;
             return true;
         } catch (error) {
             return false;

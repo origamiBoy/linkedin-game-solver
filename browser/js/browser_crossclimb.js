@@ -101,6 +101,10 @@ class CrossclimbSolver {
                     throw new Error('Error from OpenAI');
                 }
 
+                if (!response.solution) {
+                    throw new Error('No solution received from OpenAI');
+                }
+
                 const solution = response.solution.trim();
 
                 const words = solution.split(' ').map(word => word.toLowerCase());
@@ -124,9 +128,7 @@ class CrossclimbSolver {
                 const solutions = this.findRearrangedValues(words, arrangedSolution);
                 return { solutions, invalidWords: Array.from(invalidWords) };
             } catch (error) {
-                if (attempt === this.openaiAttempts - 1) {
-                    return { solutions: false, invalidWords: Array.from(invalidWords) };
-                }
+                return { solutions: false, invalidWords: Array.from(invalidWords), error: "OpenAI error" };
             }
         }
         return { solutions: false, invalidWords: Array.from(invalidWords) };
@@ -359,6 +361,13 @@ class CrossclimbSolver {
             }
 
             let result = await this.middleCluesFindSolution(undoResult);
+            if (result.error) {
+                return {
+                    success: false,
+                    solutions: middleSolutions,
+                    error: result.error
+                }
+            }
             middleSolutions = result.solutions;
 
             if (result.invalidWords.length > 0) {
@@ -439,6 +448,10 @@ class CrossclimbSolver {
                     throw new Error('Error from OpenAI');
                 }
 
+                if (!response.solution) {
+                    throw new Error('No solution received from OpenAI');
+                }
+
                 const solution = response.solution.trim();
 
                 const final_solutions = solution.split(' ').map(word => word.toLowerCase());
@@ -485,11 +498,10 @@ class CrossclimbSolver {
 
                 return { solutions: orderedFinalSolutions, invalidWords: Array.from(invalidWords) };
             } catch (error) {
-                if (attempt === this.openaiAttempts - 1) {
-                    return { solutions: false, invalidWords: Array.from(invalidWords) };
-                }
+                return { solutions: false, invalidWords: Array.from(invalidWords), error: "OpenAI error" };
             }
         }
+
         return { solutions: false, invalidWords: Array.from(invalidWords) };
     }
 
@@ -626,6 +638,13 @@ class CrossclimbSolver {
             }
 
             let result = await this.finalClueFindSolution(finalClue, middleSolutions, undoResult);
+            if (result.error) {
+                return {
+                    success: false,
+                    solutions: false,
+                    error: result.error
+                }
+            }
             finalSolutions = result.solutions;
 
             if (result.invalidWords.length > 0) {
@@ -682,7 +701,14 @@ class CrossclimbSolver {
         this.shouldStop = false;
 
         const middleSolutions = await this.solveMiddleClues();
-        if (!middleSolutions) {
+        if (middleSolutions.error) {
+            return {
+                success: false,
+                rearrangedChain: [],
+                error: middleSolutions.error
+            };
+        }
+        else if (!middleSolutions) {
             return {
                 success: false,
                 rearrangedChain: [],
