@@ -451,17 +451,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
                 // If input was stopped and failed
                 if (!result.success) {
-                    if (result.error === 'Maximum attempts reached') {
+                    if (result.error === 'Maximum attempts reached' || result.error === 'OpenAI error') {
                         chrome.runtime.sendMessage({
                             action: 'solveComplete',
                             success: false,
-                            result: { message: 'Maximum attempts reached' }
-                        });
-                    } else if (result.error === 'OpenAI error') {
-                        chrome.runtime.sendMessage({
-                            action: 'solveComplete',
-                            success: false,
-                            result: { message: 'OpenAI error' }
+                            result: { message: result.error }
                         });
                     } else {
                         chrome.runtime.sendMessage({

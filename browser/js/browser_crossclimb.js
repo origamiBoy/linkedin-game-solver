@@ -11,6 +11,9 @@ class CrossclimbSolver {
     }
 
     async initialize() {
+        if (this.shouldStop) {
+            return false;
+        }
         // Wait for the start game button and click it
         const startButton = document.querySelector('#launch-footer-start-button');
         if (startButton) {
@@ -34,7 +37,9 @@ class CrossclimbSolver {
     }
 
     async middleCluesParse() {
-
+        if (this.shouldStop) {
+            return false;
+        }
         // Click the middle guess container first
         const container = document.querySelector('.crossclimb__guess__container .crossclimb__guess--middle');
         if (container) {
@@ -65,6 +70,9 @@ class CrossclimbSolver {
     }
 
     async middleCluesFindSolution(undoResult = null) {
+        if (this.shouldStop) {
+            return { solutions: false, invalidWords: [], invalidWordChain: [], error: "Solving stopped by user" };
+        }
         if (this.MIDDLE_CLUES_COUNT === 0) {
             return { solutions: false, invalidWords: [], invalidWordChain: [] };
         }
@@ -87,7 +95,7 @@ class CrossclimbSolver {
 
         for (let attempt = 0; attempt < this.openaiAttempts; attempt++) {
             if (this.shouldStop) {
-                return { solutions: false, invalidWords: Array.from(invalidWordsCombined), invalidWordChain: Array.from(invalidWordChainCombined) };
+                return { solutions: false, invalidWords: Array.from(invalidWordsCombined), invalidWordChain: Array.from(invalidWordChainCombined), error: "Solving stopped by user" };
             }
 
             // Display variables
@@ -146,6 +154,10 @@ class CrossclimbSolver {
                     throw new Error('No solution received from OpenAI');
                 }
 
+                if (this.shouldStop) {
+                    return { solutions: false, invalidWords: Array.from(invalidWordsCombined), invalidWordChain: Array.from(invalidWordChainCombined), error: "Solving stopped by user" };
+                }
+
                 const solution = response.solution.trim();
                 const words = solution.split(' ').map(word => word.toLowerCase());
 
@@ -192,6 +204,9 @@ class CrossclimbSolver {
     }
 
     arrangeWordChain(words) {
+        if (this.shouldStop) {
+            return { success: false, error: "Solving stopped by user" };
+        }
         // Use arrow function to preserve this binding
         const findNextWords = (currentWord, remainingWords) => {
             return remainingWords.filter(word => this.differsByOneLetter(currentWord, word));
@@ -286,8 +301,13 @@ class CrossclimbSolver {
     */
 
     async middleCluesInput(solutions, undoResult = null) {
-
+        if (this.shouldStop) {
+            return { success: false, error: "Solving stopped by user" };
+        }
         for (let i = 0; i < solutions.length; i++) {
+            if (this.shouldStop) {
+                return { success: false, error: "Solving stopped by user" };
+            }
             if (undoResult && undoResult.correct.some(item => item.index === i)) {
                 continue;
             }
@@ -304,6 +324,9 @@ class CrossclimbSolver {
             const letterBoxes = container.querySelectorAll('.crossclimb__guess_box input');
 
             for (let j = 0; j < solutions[i].word.length; j++) {
+                if (this.shouldStop) {
+                    return { success: false, error: "Solving stopped by user" };
+                }
                 const letter = solutions[i].word[j];
 
                 if (letterBoxes[j]) {
@@ -316,6 +339,9 @@ class CrossclimbSolver {
     }
 
     async correctMiddleWords() {
+        if (this.shouldStop) {
+            return { success: false, error: "Solving stopped by user" };
+        }
         const containers = document.querySelectorAll('.crossclimb__guess__container .crossclimb__guess--middle');
         for (const container of containers) {
             if (container.classList.contains('crossclimb__guess--incorrect')) {
@@ -326,15 +352,24 @@ class CrossclimbSolver {
     }
 
     async middleCluesRearrange(solutions) {
+        if (this.shouldStop) {
+            return { success: false, error: "Solving stopped by user" };
+        }
         const solutionsCopy = JSON.parse(JSON.stringify(solutions));
         const sortedSolutions = [...solutionsCopy].sort((a, b) => a.final_order - b.final_order);
 
         for (let i = 0; i < sortedSolutions.length; i++) {
+            if (this.shouldStop) {
+                return { success: false, error: "Solving stopped by user" };
+            }
             const currentIndex = solutionsCopy.findIndex(s => s.final_order === sortedSolutions[i].final_order);
             if (currentIndex !== i) {
                 await this.slideUp(currentIndex, currentIndex - i);
 
                 for (let move = 0; move < currentIndex - i; move++) {
+                    if (this.shouldStop) {
+                        return { success: false, error: "Solving stopped by user" };
+                    }
                     const currentPos = currentIndex - move;
                     const swapPos = currentPos - 1;
 
@@ -377,12 +412,18 @@ class CrossclimbSolver {
     }
 
     async middleClueCheckSolution() {
+        if (this.shouldStop) {
+            return { success: false, error: "Solving stopped by user" };
+        }
         await new Promise(resolve => setTimeout(resolve, 2000));
         const clue = document.querySelector('.crossclimb__clue');
         return clue && clue.id === 'crossclimb-clue-section-0';
     }
 
     async undoMiddleCluesInput(middleSolutions) {
+        if (this.shouldStop) {
+            return { correct: [], incorrect: [], error: "Solving stopped by user" };
+        }
         const result = {
             correct: [],
             incorrect: []
@@ -402,6 +443,9 @@ class CrossclimbSolver {
                 const letterBoxes = containers[i].querySelectorAll('.crossclimb__guess_box input');
 
                 for (let j = 0; j < letterBoxes.length; j++) {
+                    if (this.shouldStop) {
+                        return { correct: [], incorrect: [], error: "Solving stopped by user" };
+                    }
                     if (letterBoxes[j]) {
                         letterBoxes[j].value = '';
                         letterBoxes[j].dispatchEvent(new Event('input', { bubbles: true }));
@@ -415,6 +459,9 @@ class CrossclimbSolver {
     }
 
     async solveMiddleClues() {
+        if (this.shouldStop) {
+            return { success: false, solutions: false, error: "Solving stopped by user" };
+        }
         await this.middleCluesParse();
         let middleSolutions = false;
         let undoResult = {
@@ -425,7 +472,7 @@ class CrossclimbSolver {
 
         for (let attempt = 0; attempt < this.middleClueAttempts; attempt++) {
             if (this.shouldStop) {
-                return false;
+                return { success: false, solutions: false, error: "Solving stopped by user" };
             }
 
             let result = await this.middleCluesFindSolution(undoResult);
@@ -506,7 +553,7 @@ class CrossclimbSolver {
 
         for (let attempt = 0; attempt < this.openaiAttempts; attempt++) {
             if (this.shouldStop) {
-                return { solutions: false, invalidWords: Array.from(invalidWordsCombined) };
+                return { solutions: false, invalidWords: Array.from(invalidWordsCombined), error: "Solving stopped by user" };
             }
 
             // Display variables
@@ -553,6 +600,10 @@ class CrossclimbSolver {
 
                 if (!response.solution) {
                     throw new Error('No solution received from OpenAI');
+                }
+
+                if (this.shouldStop) {
+                    return { solutions: false, invalidWords: Array.from(invalidWordsCombined), error: "Solving stopped by user" };
                 }
 
                 const solution = response.solution.trim();
@@ -607,11 +658,17 @@ class CrossclimbSolver {
     }
 
     async finalClueCheckSolution() {
+        if (this.shouldStop) {
+            return { success: false, error: "Solving stopped by user" };
+        }
         const hintButton = document.querySelector('[data-control-btn="hint"]');
         return hintButton && hintButton.disabled;
     }
 
     async undoFinalCluesInput(finalSolutions) {
+        if (this.shouldStop) {
+            return { correct: [], incorrect: [], error: "Solving stopped by user" };
+        }
         const result = {
             correct: [],
             incorrect: []
@@ -631,6 +688,9 @@ class CrossclimbSolver {
             const letterBoxes = firstWordElement.querySelectorAll('.crossclimb__guess_box input');
 
             for (let j = 0; j < letterBoxes.length; j++) {
+                if (this.shouldStop) {
+                    return false;
+                }
                 if (letterBoxes[j]) {
                     letterBoxes[j].value = '';
                     letterBoxes[j].dispatchEvent(new Event('input', { bubbles: true }));
@@ -653,6 +713,9 @@ class CrossclimbSolver {
             const letterBoxes = lastWordElement.querySelectorAll('.crossclimb__guess_box input');
 
             for (let j = 0; j < letterBoxes.length; j++) {
+                if (this.shouldStop) {
+                    return false;
+                }
                 if (letterBoxes[j]) {
                     letterBoxes[j].value = '';
                     letterBoxes[j].dispatchEvent(new Event('input', { bubbles: true }));
@@ -665,6 +728,9 @@ class CrossclimbSolver {
     }
 
     async finalCluesInput(finalSolutions, undoResult = null) {
+        if (this.shouldStop) {
+            return { success: false, error: "Solving stopped by user" };
+        }
         // Handle first word
         if (!undoResult || !undoResult.correct.some(item => item.index === 0)) {
             const firstWordElement = document.querySelector('.crossclimb__guess:nth-child(1)');
@@ -675,6 +741,9 @@ class CrossclimbSolver {
                 const letterBoxes = firstWordElement.querySelectorAll('.crossclimb__guess_box input');
 
                 for (let j = 0; j < finalSolutions[0].length; j++) {
+                    if (this.shouldStop) {
+                        return false;
+                    }
                     const letter = finalSolutions[0][j];
 
                     if (letterBoxes[j]) {
@@ -687,6 +756,9 @@ class CrossclimbSolver {
             }
         }
 
+        if (this.shouldStop) {
+            return false;
+        }
         // Handle last word
         if (!undoResult || !undoResult.correct.some(item => item.index === 1)) {
             const lastWordElement = document.querySelector('div.crossclimb__guess--last');
@@ -697,13 +769,15 @@ class CrossclimbSolver {
                 const letterBoxes = lastWordElement.querySelectorAll('.crossclimb__guess_box input');
 
                 for (let j = 0; j < finalSolutions[1].length; j++) {
+                    if (this.shouldStop) {
+                        return false;
+                    }
                     const letter = finalSolutions[1][j];
 
                     if (letterBoxes[j]) {
                         letterBoxes[j].value = letter;
                         letterBoxes[j].dispatchEvent(new Event('input', { bubbles: true }));
                         await new Promise(resolve => setTimeout(resolve, 50));
-                    } else {
                     }
                 }
             }
@@ -711,6 +785,12 @@ class CrossclimbSolver {
     }
 
     async finalClueParse() {
+        if (this.shouldStop) {
+            return {
+                success: false,
+                error: "Solving stopped by user"
+            };
+        }
         const clue = document.querySelector('.crossclimb__clue');
         if (!clue) return '';
 
@@ -726,6 +806,9 @@ class CrossclimbSolver {
     }
 
     async solveFinalClues(middleSolutions) {
+        if (this.shouldStop) {
+            return { success: false, solutions: false, error: "Solving stopped by user" };
+        }
         const finalClue = await this.finalClueParse();
         let finalSolutions = false;
         let undoResult = {
@@ -735,7 +818,7 @@ class CrossclimbSolver {
 
         for (let attempt = 0; attempt < this.finalClueAttempts; attempt++) {
             if (this.shouldStop) {
-                return false;
+                return { success: false, solutions: false, error: "Solving stopped by user" };
             }
 
             let result = await this.finalClueFindSolution(finalClue, middleSolutions, undoResult);
@@ -799,8 +882,9 @@ class CrossclimbSolver {
     }
 
     async getCorrectSolution() {
-        this.shouldStop = false;
-
+        if (this.shouldStop) {
+            return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+        }
         const middleSolutions = await this.solveMiddleClues();
         if (middleSolutions.error) {
             return {
@@ -820,6 +904,10 @@ class CrossclimbSolver {
         const sortedMiddleSolutions = [...middleSolutions].sort((a, b) => a.final_order - b.final_order);
         const orderedMiddleWords = sortedMiddleSolutions.map(s => s.word);
 
+        if (this.shouldStop) {
+            return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+        }
+
         const finalSolutions = await this.solveFinalClues(middleSolutions);
         if (!finalSolutions) {
             return {
@@ -836,6 +924,9 @@ class CrossclimbSolver {
     }
 
     async inputCorrectSolution() {
+        if (this.shouldStop) {
+            return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+        }
         const data = await chrome.storage.local.get('crossclimbSolution');
         const storedSolution = data.crossclimbSolution;
 
@@ -849,6 +940,9 @@ class CrossclimbSolver {
 
         // Input middle words
         for (let i = 0; i < storedSolution.middleSolutions.length; i++) {
+            if (this.shouldStop) {
+                return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+            }
             const container = document.querySelector(`.crossclimb__guess__container .crossclimb__guess--middle:nth-child(${i + 2})`);
             if (!container) continue;
 
@@ -858,6 +952,9 @@ class CrossclimbSolver {
             const letterBoxes = container.querySelectorAll('.crossclimb__guess_box input');
 
             for (let j = 0; j < storedSolution.middleSolutions[i].word.length; j++) {
+                if (this.shouldStop) {
+                    return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+                }
                 const letter = storedSolution.middleSolutions[i].word[j];
 
                 if (letterBoxes[j]) {
@@ -885,6 +982,9 @@ class CrossclimbSolver {
             };
         }
 
+        if (this.shouldStop) {
+            return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+        }
         // Input first word
         const firstWordElement = document.querySelector('.crossclimb__guess:nth-child(1)');
         if (firstWordElement) {
@@ -894,6 +994,9 @@ class CrossclimbSolver {
             const letterBoxes = firstWordElement.querySelectorAll('.crossclimb__guess_box input');
 
             for (let j = 0; j < storedSolution.finalSolutions[0].length; j++) {
+                if (this.shouldStop) {
+                    return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+                }
                 const letter = storedSolution.finalSolutions[0][j];
 
                 if (letterBoxes[j]) {
@@ -904,6 +1007,9 @@ class CrossclimbSolver {
             }
         }
 
+        if (this.shouldStop) {
+            return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+        }
         // Input last word
         const lastWordElement = document.querySelector('div.crossclimb__guess--last');
         if (lastWordElement) {
@@ -913,6 +1019,9 @@ class CrossclimbSolver {
             const letterBoxes = lastWordElement.querySelectorAll('.crossclimb__guess_box input');
 
             for (let j = 0; j < storedSolution.finalSolutions[1].length; j++) {
+                if (this.shouldStop) {
+                    return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+                }
                 const letter = storedSolution.finalSolutions[1][j];
 
                 if (letterBoxes[j]) {
@@ -973,11 +1082,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
                 // If input was stopped and failed
                 if (!result.success) {
-                    chrome.runtime.sendMessage({
-                        action: 'solveComplete',
-                        success: false,
-                        result: { message: result.error || 'Failed to solve puzzle' }
-                    });
+                    if (result.error === 'Maximum attempts reached' || result.error === 'OpenAI error') {
+                        chrome.runtime.sendMessage({
+                            action: 'solveComplete',
+                            success: false,
+                            result: { message: result.error }
+                        });
+                    } else {
+                        chrome.runtime.sendMessage({
+                            action: 'solveComplete',
+                            success: false,
+                            result: { message: 'Closed Execution' }
+                        });
+                    }
                     sendResponse({ success: true });
                     return;
                 }
