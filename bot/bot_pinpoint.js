@@ -116,7 +116,7 @@ class PinpointSolver {
             await submitButton.click();
 
             // Wait for the result
-            await this.page.waitForTimeout(1000);
+            await this.page.waitForTimeout(100);
             return true;
         } catch (error) {
             console.error('Error inputting solution:', error);
