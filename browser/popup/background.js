@@ -475,7 +475,7 @@ async function resetState() {
 
 // Listen for tab updates to detect game type and reset solving state
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-    if (changeInfo.status === 'complete' && tab.url) {
+    if (changeInfo.status === 'complete' && tab.url && !tab.url.includes('/results/')) {
         await updateCurrentTab();
         await updatePopupState();
     }

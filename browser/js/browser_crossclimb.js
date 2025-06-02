@@ -66,30 +66,71 @@ class CrossclimbSolver {
 
     async middleCluesFindSolution(undoResult = null) {
         if (this.MIDDLE_CLUES_COUNT === 0) {
-            return { solutions: false, invalidWords: [] };
+            return { solutions: false, invalidWords: [], invalidWordChain: [] };
         }
 
-        const cluesText = this.middleClues.map((clue, index) => `${index + 1} ${clue}`).join(' ');
-        const invalidWords = new Set();
+        const cluesText = this.middleClues.map((clue, index) => `{${index + 1}: ${clue}}`).join(' ');
+
+        // Initialize state Sets
+        const invalidWordsCombined = new Set();
+        const invalidWordChainCombined = new Set();
+
+        // Initialize from undoResult if it exists
+        if (undoResult) {
+            if (undoResult.incorrect) {
+                undoResult.incorrect.forEach(item => invalidWordsCombined.add(item));
+            }
+            if (undoResult.invalidWordChain) {
+                undoResult.invalidWordChain.forEach(chain => invalidWordChainCombined.add(chain.join(' ')));
+            }
+        }
 
         for (let attempt = 0; attempt < this.openaiAttempts; attempt++) {
             if (this.shouldStop) {
-                return { solutions: false, invalidWords: Array.from(invalidWords) };
+                return { solutions: false, invalidWords: Array.from(invalidWordsCombined), invalidWordChain: Array.from(invalidWordChainCombined) };
             }
 
-            const incorrectWords = new Set();
+            // Display variables
+            let invalidWordsDisplay = "";
+            let validWordsDisplay = "";
+            let invalidWordChainDisplay = "";
 
-            if (undoResult && undoResult.incorrect.length > 0) {
-                undoResult.incorrect.forEach(item => incorrectWords.add(item.word));
+            // Convert to display format
+            if (invalidWordsCombined.size > 0) {
+                const invalidWordsDisplayList = new Set();
+                invalidWordsCombined.forEach((item) => {
+                    if (item.index !== -1) {
+                        invalidWordsDisplayList.add(`{${item.index + 1}: ${item.word}}`);
+                    } else {
+                        invalidWordsDisplayList.add(`"${item.word}"`);
+                    }
+                });
+                invalidWordsDisplay = Array.from(invalidWordsDisplayList).join(', ');
             }
 
-            invalidWords.forEach(word => incorrectWords.add(word));
+            if (undoResult?.correct?.length > 0) {
+                const validWordsDisplayList = new Set();
+                undoResult.correct.forEach((item) => validWordsDisplayList.add(`{${item.index + 1}: ${item.word}}`));
+                validWordsDisplay = Array.from(validWordsDisplayList).join(', ');
+            }
 
-            const incorrectWordsText = incorrectWords.size > 0
-                ? `\nNote: These previous words were incorrect: ${Array.from(incorrectWords).join(', ')}. Please provide different answers.`
+            if (invalidWordChainCombined.size > 0) {
+                invalidWordChainDisplay = Array.from(invalidWordChainCombined).map(chain => `"${chain}"`).join(', ');
+            }
+
+            const incorrectWordsText = invalidWordsDisplay
+                ? `\nNote: These previous words were incorrect with their respective clue numbers if relevant: ${invalidWordsDisplay}. Please provide different answers.`
                 : '';
 
-            const prompt = `you are solving the middle clues from the LinkedIn puzzle Crossclimb. There are ${this.MIDDLE_CLUES_COUNT} clues each with ${this.WORD_SIZE} letters. The words be able to be arrange in a way such that each word differs by only one letter. Output only the exact word answers in the order of the clue given with one space between them, and nothing else, like the following: 'cork hook corn cook torn'. the clues are ${cluesText}${incorrectWordsText}`;
+            const correctWordsText = validWordsDisplay
+                ? `\nNote: These previous words were correct with their respective clue numbers: ${validWordsDisplay}. Include these in the final answer.`
+                : '';
+
+            const invalidWordChainText = invalidWordChainDisplay
+                ? `\nNote: These previous entire solutions were incorrect and could not be arranged in a valid chain: ${invalidWordChainDisplay}. Please provide different answers.`
+                : '';
+
+            const prompt = `You are solving the middle clues from the LinkedIn puzzle Crossclimb. There are ${this.MIDDLE_CLUES_COUNT} clues each with ${this.WORD_SIZE} letters. The words be able to be arrange in a way such that each word differs by only one letter, there are no duplicate words. The output should only consist of the word answers with one space between them, with no other text or numbers. An example output is: 'cork hook corn cook torn'. The clues are ${cluesText}${incorrectWordsText}${correctWordsText}${invalidWordChainText}`;
 
             try {
                 const response = await chrome.runtime.sendMessage({
@@ -106,7 +147,6 @@ class CrossclimbSolver {
                 }
 
                 const solution = response.solution.trim();
-
                 const words = solution.split(' ').map(word => word.toLowerCase());
 
                 if (words.length !== this.MIDDLE_CLUES_COUNT) {
@@ -116,22 +156,39 @@ class CrossclimbSolver {
                 if (!words.every(word => word.length === this.WORD_SIZE)) {
                     words.forEach(word => {
                         if (word.length !== this.WORD_SIZE) {
-                            invalidWords.add(word);
+                            invalidWordsCombined.add({ index: -1, word });
                         }
                     });
                     continue;
                 }
+
                 const arrangedSolution = this.arrangeWordChain(words);
                 if (!arrangedSolution) {
+                    invalidWordChainCombined.add(words.join(' '));
                     continue;
                 }
+
                 const solutions = this.findRearrangedValues(words, arrangedSolution);
-                return { solutions, invalidWords: Array.from(invalidWords) };
+                return {
+                    solutions,
+                    invalidWords: Array.from(invalidWordsCombined),
+                    invalidWordChain: Array.from(invalidWordChainCombined)
+                };
             } catch (error) {
-                return { solutions: false, invalidWords: Array.from(invalidWords), error: "OpenAI error" };
+                return {
+                    solutions: false,
+                    invalidWords: Array.from(invalidWordsCombined),
+                    invalidWordChain: Array.from(invalidWordChainCombined),
+                    error: "OpenAI error"
+                };
             }
         }
-        return { solutions: false, invalidWords: Array.from(invalidWords) };
+        return {
+            solutions: false,
+            invalidWords: Array.from(invalidWordsCombined),
+            invalidWordChain: Array.from(invalidWordChainCombined),
+            error: "Maximum attempts reached"
+        };
     }
 
     arrangeWordChain(words) {
@@ -156,6 +213,16 @@ class CrossclimbSolver {
             }
             return null;
         };
+
+        // If duplicate words, invalid arrangement
+        for (let i = 0; i < words.length; i++) {
+            for (let j = 0; j < words.length; j++) {
+                if (i == j) continue;
+                if (words[i] == words[j]) {
+                    return false;
+                }
+            }
+        }
 
         for (const startWord of words) {
             const remainingWords = words.filter(w => w !== startWord);
@@ -352,7 +419,8 @@ class CrossclimbSolver {
         let middleSolutions = false;
         let undoResult = {
             correct: [],
-            incorrect: []
+            incorrect: [],
+            invalidWordChain: []
         };
 
         for (let attempt = 0; attempt < this.middleClueAttempts; attempt++) {
@@ -373,10 +441,20 @@ class CrossclimbSolver {
             if (result.invalidWords.length > 0) {
                 const existingWords = new Set(undoResult.incorrect.map(item => item.word));
                 const newInvalidWords = result.invalidWords
-                    .filter(word => !existingWords.has(word))
-                    .map(word => ({ index: -1, word }));
+                    .filter(word => !existingWords.has(word.word))
+                    .map(word => ({ index: -1, word: word.word }));
 
                 undoResult.incorrect = [...undoResult.incorrect, ...newInvalidWords];
+            }
+
+            // Add any invalid chains, ensuring no duplicates
+            if (result.invalidWordChain.length > 0) {
+                const existingChains = new Set(undoResult.invalidWordChain.map(chain => chain.join(' ')));
+                const newInvalidChains = result.invalidWordChain
+                    .filter(chain => !existingChains.has(chain))
+                    .map(chain => chain.split(' '));
+
+                undoResult.invalidWordChain = [...undoResult.invalidWordChain, ...newInvalidChains];
             }
 
             if (!middleSolutions) {
@@ -417,26 +495,51 @@ class CrossclimbSolver {
         const orderedWords = [...middleSolutions].sort((a, b) => a.final_order - b.final_order).map(s => s.word);
         const firstWord = orderedWords[0];
         const lastWord = orderedWords[orderedWords.length - 1];
-        const invalidWords = new Set();
+
+        // Initialize state Set for invalid words
+        const invalidWordsCombined = new Set();
+
+        // Initialize from undoResult if it exists
+        if (undoResult?.incorrect) {
+            undoResult.incorrect.forEach(item => invalidWordsCombined.add(item.word));
+        }
 
         for (let attempt = 0; attempt < this.openaiAttempts; attempt++) {
             if (this.shouldStop) {
-                return { solutions: false, invalidWords: Array.from(invalidWords) };
+                return { solutions: false, invalidWords: Array.from(invalidWordsCombined) };
             }
 
-            const incorrectWords = new Set();
+            // Display variables
+            let invalidWordsDisplay = "";
+            let validWordsDisplay = "";
+            let middleWordsDisplay = "";
 
-            if (undoResult && undoResult.incorrect.length > 0) {
-                undoResult.incorrect.forEach(item => incorrectWords.add(item.word));
+            // Convert to display format
+            if (invalidWordsCombined.size > 0) {
+                invalidWordsDisplay = Array.from(invalidWordsCombined).map(word => `"${word}"`).join(', ');
             }
 
-            invalidWords.forEach(word => incorrectWords.add(word));
+            if (undoResult?.correct?.length > 0) {
+                validWordsDisplay = Array.from(undoResult.correct).map(item => `"${item.word}"`).join(', ');
+            }
 
-            const incorrectWordsText = incorrectWords.size > 0
-                ? `\nNote: These previous words were incorrect: ${Array.from(incorrectWords).join(', ')}. Please provide different answers that still connect to "${firstWord}" and "${lastWord}".`
+            if (middleSolutions.map(s => s.word).length > 0) {
+                middleWordsDisplay = Array.from(middleSolutions.map(s => s.word)).map(item => `"${item}"`).join(', ');
+            }
+
+            const incorrectWordsText = invalidWordsDisplay
+                ? `\nNote: These previous words were incorrect: ${invalidWordsDisplay}. Please provide different answers that still connect to "${firstWord}" and "${lastWord}".`
                 : '';
 
-            const prompt = `You are solving the final two clues from the LinkedIn puzzle Crossclimb. Their are one or two related clues, each with a single word answer of exactly ${this.WORD_SIZE} letters. One word solution should only differ from one letter of "${firstWord}" and the other solution should differ from only one letter of "${lastWord}". Output only the exact word answers with one space between them and nothing else. The clue is: "${finalClue}"${incorrectWordsText}`;
+            const correctWordsText = validWordsDisplay
+                ? `\nNote: These previous words were correct: ${validWordsDisplay}. Include these in the final answer.`
+                : '';
+
+            const middleWordsText = middleWordsDisplay
+                ? `\nNote: No answer can match the following words: ${middleWordsDisplay}. Please provide different answers.`
+                : '';
+
+            const prompt = `You are solving the final two clues from the LinkedIn puzzle Crossclimb. Their are one or two related clues, each with a single word answer of exactly ${this.WORD_SIZE} letters. One word solution should only differ from one letter of "${firstWord}" and the other solution should differ from only one letter of "${lastWord}". Output only the exact word answers with one space between them and nothing else. The clue is: {${finalClue}}${incorrectWordsText}${correctWordsText}${middleWordsText}`;
 
             try {
                 const response = await chrome.runtime.sendMessage({
@@ -453,7 +556,6 @@ class CrossclimbSolver {
                 }
 
                 const solution = response.solution.trim();
-
                 const final_solutions = solution.split(' ').map(word => word.toLowerCase());
 
                 if (final_solutions.length !== 2) {
@@ -463,10 +565,10 @@ class CrossclimbSolver {
                 if (!final_solutions.every(word => word.length === this.WORD_SIZE)) {
                     final_solutions.forEach(word => {
                         if (word.length !== this.WORD_SIZE) {
-                            invalidWords.add(word);
+                            invalidWordsCombined.add(word);
                         }
                         else if (!this.differsByOneLetter(word, firstWord) && !this.differsByOneLetter(word, lastWord)) {
-                            invalidWords.add(word);
+                            invalidWordsCombined.add(word);
                         }
                     });
                     continue;
@@ -484,10 +586,10 @@ class CrossclimbSolver {
 
                 if (!isValidChain) {
                     if (!firstSolutionConnectsToFirst && !firstSolutionConnectsToLast) {
-                        invalidWords.add(final_solutions[0]);
+                        invalidWordsCombined.add(final_solutions[0]);
                     }
                     if (!secondSolutionConnectsToFirst && !secondSolutionConnectsToLast) {
-                        invalidWords.add(final_solutions[1]);
+                        invalidWordsCombined.add(final_solutions[1]);
                     }
                     continue;
                 }
@@ -496,13 +598,12 @@ class CrossclimbSolver {
                     ? final_solutions
                     : [final_solutions[1], final_solutions[0]];
 
-                return { solutions: orderedFinalSolutions, invalidWords: Array.from(invalidWords) };
+                return { solutions: orderedFinalSolutions, invalidWords: Array.from(invalidWordsCombined) };
             } catch (error) {
-                return { solutions: false, invalidWords: Array.from(invalidWords), error: "OpenAI error" };
+                return { solutions: false, invalidWords: Array.from(invalidWordsCombined), error: "OpenAI error" };
             }
         }
-
-        return { solutions: false, invalidWords: Array.from(invalidWords) };
+        return { solutions: false, invalidWords: Array.from(invalidWordsCombined) };
     }
 
     async finalClueCheckSolution() {
