@@ -1,4 +1,4 @@
-// Game configuration object that defines all game types and their properties
+// Game configuration object for service worker
 const GAME_CONFIG = {
     queens: {
         name: "Queens",
@@ -159,5 +159,5 @@ const GAME_CONFIG = {
     }
 };
 
-// Export for regular scripts
-export default GAME_CONFIG; 
+// Make the config available globally for service worker
+self.GAME_CONFIG = GAME_CONFIG; 

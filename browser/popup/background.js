@@ -12,8 +12,17 @@ const state = {
     isRefreshing: false,
     refreshStartTime: null,
     activeButton: null,
-    viewPreference: 'list' // 'list' or 'grid'
+    viewPreference: 'list', // 'list' or 'grid'
+    hasCorrectUrl: false // New state to track URL match
 };
+
+// Import game config for service worker
+importScripts('game_config_sw.js');
+
+// Helper function to get game URL
+function getGameUrl(gameType) {
+    return self.GAME_CONFIG[gameType.toLowerCase()]?.url;
+}
 
 // OpenAI API key should be stored in extension's storage
 let openaiApiKey = null;
@@ -63,23 +72,36 @@ async function initialize() {
 async function updateCurrentTab() {
     try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tab) {
-            // Only update currentTab if we're not solving
-            if (!state.isSolving) {
-                state.currentTab = tab;
-            }
-            detectGameType(tab.url);
+        if (!tab || !tab.url) {
+            state.statusMessage = 'Not Ready - No Active Tab';
+            state.statusType = 'error';
+            state.isReady = false;
+            state.hasCorrectUrl = false;
+            await persistState();
+            return;
+        }
 
-            // Update status based on solving state and URL
-            if (state.isSolving) {
-                state.isReady = false;
-                await setLoadingState();
-            } else if (state.gameType === 'Unknown') {
-                state.statusMessage = 'Not Ready - Unknown Game';
-                state.statusType = 'error';
-                state.isReady = false;
-            } else if (!tab.url.includes('/desktop/')) {
-                state.statusMessage = `Not Ready - <a href="https://www.linkedin.com/games/view/${state.gameType.toLowerCase()}/desktop/" target="_blank" class="small-link">Correct Game Link</a>`;
+        // Only update currentTab if we're not solving
+        if (!state.isSolving) {
+            state.currentTab = tab;
+        }
+
+        // Always detect game type and update URL match state
+        detectGameType(tab.url);
+        const expectedUrl = getGameUrl(state.gameType);
+        state.hasCorrectUrl = state.gameType !== 'Unknown' && tab.url === expectedUrl;
+
+        // Update status based on solving state and URL
+        if (state.isSolving) {
+            state.isReady = false;
+            await setLoadingState();
+        } else if (state.gameType === 'Unknown') {
+            state.statusMessage = 'Not Ready - Unknown Game';
+            state.statusType = 'error';
+            state.isReady = false;
+        } else {
+            if (!state.hasCorrectUrl) {
+                state.statusMessage = 'Not Ready - Incorrect Game URL';
                 state.statusType = 'error';
                 state.isReady = false;
             } else {
@@ -87,30 +109,35 @@ async function updateCurrentTab() {
                 state.statusType = 'ready';
                 state.isReady = true;
             }
-
-            // Persist state after update
-            await persistState();
         }
+
+        // Persist state after update
+        await persistState();
     } catch (error) {
-        // Silent error handling
+        console.error('Error in updateCurrentTab:', error);
+        state.statusMessage = 'Error updating tab state';
+        state.statusType = 'error';
+        state.isReady = false;
+        state.hasCorrectUrl = false;
+        await persistState();
     }
 }
 
 // Helper function to detect game type from URL
 function detectGameType(url) {
-    if (url.includes('queens')) {
-        state.gameType = 'Queens';
-    } else if (url.includes('zip')) {
-        state.gameType = 'Zip';
-    } else if (url.includes('tango')) {
-        state.gameType = 'Tango';
-    } else if (url.includes('pinpoint')) {
-        state.gameType = 'Pinpoint';
-    } else if (url.includes('crossclimb')) {
-        state.gameType = 'Crossclimb';
-    } else {
+    if (!url) {
         state.gameType = 'Unknown';
+        return;
     }
+
+    // Check each game's ID in the URL path
+    for (const [gameId, gameConfig] of Object.entries(self.GAME_CONFIG)) {
+        if (url.includes(`${gameId}`)) {
+            state.gameType = gameConfig.name;
+            return;
+        }
+    }
+    state.gameType = 'Unknown';
 }
 
 // Initialize on startup
@@ -134,7 +161,8 @@ async function updatePopupState() {
                 isReady: state.isReady,
                 solvingGameType: state.solvingGameType,
                 solvingWithApiKey: state.solvingWithApiKey,
-                viewPreference: state.viewPreference
+                viewPreference: state.viewPreference,
+                hasCorrectUrl: state.hasCorrectUrl
             }
         }).catch(error => {
             // Ignore connection errors when popup is closed

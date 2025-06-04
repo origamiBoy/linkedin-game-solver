@@ -51,8 +51,8 @@ function showStatus(message, type = 'ready') {
     }
 }
 
-// Function to create game card HTML
-function createGameCard(gameId, gameConfig, viewMode) {
+// Function to create game card HTML for grid/list views
+function createGameCard(gameId, gameConfig, viewMode, showAbout = false) {
     const card = document.createElement('a');
     card.href = gameConfig.url;
     card.target = '_blank';
@@ -72,6 +72,13 @@ function createGameCard(gameId, gameConfig, viewMode) {
     name.className = 'game-card-name';
     name.textContent = gameConfig.name;
     content.appendChild(name);
+
+    if (showAbout && gameConfig.about) {
+        const about = document.createElement('p');
+        about.className = 'game-card-about';
+        about.textContent = gameConfig.about;
+        content.appendChild(about);
+    }
 
     const tags = document.createElement('div');
     tags.className = 'game-card-tags';
@@ -95,6 +102,60 @@ function createGameCard(gameId, gameConfig, viewMode) {
     return card;
 }
 
+// Function to create a game control button
+function createGameControlButton(control, gameType, state) {
+    const button = document.createElement('button');
+    button.className = 'game-control-button';
+    button.id = control.id;
+    button.innerHTML = `
+        <span class="material-icons">${control.icon}</span>
+        <span>${control.name}</span>
+    `;
+
+    // Set button state
+    const requiresApiKey = control.requirements?.ai || false;
+    const requiresStored = control.requirements?.stored || false;
+    const isReady = state.isReady && (!requiresApiKey || state.hasApiKey);
+
+    button.disabled = state.isSolving || !isReady;
+    button.classList.toggle('api-key-required', requiresApiKey && !state.hasApiKey);
+    button.classList.toggle('solving', state.isSolving);
+
+    // Add click handler
+    button.addEventListener('click', () => {
+        chrome.runtime.sendMessage({
+            action: 'startSolving',
+            solveAction: control.solveAction,
+            requiresApiKey: requiresApiKey
+        });
+    });
+
+    return button;
+}
+
+// Function to create a cancel button
+function createCancelButton(state) {
+    const button = document.createElement('button');
+    button.className = 'game-control-button cancel';
+    button.id = 'cancelButton';
+    button.innerHTML = `
+        <span class="material-icons">close</span>
+        <span>Cancel</span>
+    `;
+
+    // Set button state - enabled only when solving
+    button.disabled = !state.isSolving;
+
+    // Add click handler
+    button.addEventListener('click', () => {
+        if (state.isSolving) {
+            chrome.runtime.sendMessage({ action: 'cancelSolving' });
+        }
+    });
+
+    return button;
+}
+
 // Function to update game cards view
 async function updateGameCardsView(viewMode, container = 'gameCardsContainer') {
     // Wait for GAME_CONFIG to be loaded
@@ -112,8 +173,24 @@ async function updateGameCardsView(viewMode, container = 'gameCardsContainer') {
     const containerElement = document.getElementById(container);
     if (!containerElement) return;
 
-    containerElement.className = `game-cards-container ${viewMode}`;
+    // Clear existing content
     containerElement.innerHTML = '';
+
+    // Get current state to check if solving
+    const response = await chrome.runtime.sendMessage({ action: 'getState' });
+    const state = response?.state;
+
+    // Add cancel button at the top if solving
+    if (state?.isSolving && container === 'gameCardsContainer') {
+        const cancelButton = createCancelButton(state);
+        const cancelContainer = document.createElement('div');
+        cancelContainer.style.marginBottom = '8px';
+        cancelContainer.appendChild(cancelButton);
+        containerElement.appendChild(cancelContainer);
+    }
+
+    // Set container class and add game cards
+    containerElement.className = `game-cards-container ${viewMode}`;
 
     Object.entries(GAME_CONFIG).forEach(([gameId, gameConfig]) => {
         containerElement.appendChild(createGameCard(gameId, gameConfig, viewMode));
@@ -172,6 +249,82 @@ const updateUI = async (state) => {
         elements.gameTag.textContent = `Game detected: ${state.gameType}`;
     }
 
+    // Update game controls and single game card
+    const gameControlsContainer = document.getElementById('gameControlsContainer');
+    const singleGameCardContainer = document.getElementById('singleGameCardContainer');
+    const gameCardsContainer = document.getElementById('gameCardsContainer');
+
+    // Handle cancel button visibility
+    if (state.isSolving) {
+        const cancelButton = createCancelButton(state);
+
+        // If we're on the home view, show cancel button at the top of game cards
+        if (contentManager?.isSectionActive('home') && gameCardsContainer) {
+            // Remove any existing cancel button
+            const existingCancel = gameCardsContainer.querySelector('.game-control-button.cancel');
+            if (existingCancel) {
+                existingCancel.remove();
+            }
+
+            // Create a container for the cancel button
+            const cancelContainer = document.createElement('div');
+            cancelContainer.style.marginBottom = '8px';
+            cancelContainer.appendChild(cancelButton);
+
+            // Insert at the top of the game cards container
+            gameCardsContainer.insertBefore(cancelContainer, gameCardsContainer.firstChild);
+        }
+    } else {
+        // Remove cancel button from game cards if not solving
+        const existingCancel = gameCardsContainer?.querySelector('.game-control-button.cancel');
+        if (existingCancel) {
+            existingCancel.remove();
+        }
+    }
+
+    if (gameControlsContainer && singleGameCardContainer) {
+        // Clear existing controls
+        gameControlsContainer.innerHTML = '';
+        singleGameCardContainer.innerHTML = '';
+
+        if (state.gameType && state.gameType !== 'Unknown') {
+            const gameConfig = GAME_CONFIG[state.gameType.toLowerCase()];
+            if (gameConfig) {
+                if (state.hasCorrectUrl) {
+                    // Show game controls when URL is correct
+                    gameControlsContainer.style.display = 'flex';
+                    singleGameCardContainer.style.display = 'none';
+
+                    // Create control buttons based on game config
+                    gameConfig.controls.forEach(control => {
+                        const button = createGameControlButton(control, state.gameType, state);
+                        gameControlsContainer.appendChild(button);
+                    });
+
+                    // Add cancel button after game controls
+                    const cancelButton = createCancelButton(state);
+                    gameControlsContainer.appendChild(cancelButton);
+                } else {
+                    // Show single game card when URL is incorrect but game is detected
+                    gameControlsContainer.style.display = 'none';
+                    singleGameCardContainer.style.display = 'block';
+
+                    const card = createGameCard(state.gameType.toLowerCase(), gameConfig, 'grid', true);
+                    singleGameCardContainer.appendChild(card);
+
+                    // Add cancel button after game card if solving
+                    if (state.isSolving) {
+                        const cancelButton = createCancelButton(state);
+                        const cancelContainer = document.createElement('div');
+                        cancelContainer.style.marginTop = '8px';
+                        cancelContainer.appendChild(cancelButton);
+                        singleGameCardContainer.appendChild(cancelContainer);
+                    }
+                }
+            }
+        }
+    }
+
     // Update solve button state
     if (elements.solveButton) {
         // Pinpoint and Crossclimb have apikeys section
@@ -217,22 +370,6 @@ const updateUI = async (state) => {
             }
         }
     }
-
-    // Update close button state
-    if (elements.cancelButton) {
-        elements.cancelButton.disabled = !state.isSolving;
-        elements.cancelButton.textContent = 'Cancel';
-        elements.cancelButton.classList.toggle('solving', state.isSolving);
-    }
-
-    // Update solve buttons
-    SOLVE_BUTTONS.forEach(button => {
-        if (button) {
-            const requiresApiKey = API_KEY_REQUIRED_BUTTONS.includes(button);
-            button.disabled = state.isSolving || !state.isReady || (requiresApiKey && !state.hasApiKey);
-            button.classList.toggle('solving', state.isSolving);
-        }
-    });
 
     // Update API key section
     if (elements.deleteApiKey) {
@@ -374,15 +511,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateGameCardsView('condensed', 'linksGameCardsContainer')
     ]);
 
-    // Initialize game-specific controls
-    if (tab.url.includes('pinpoint')) {
-        initializePinpointControls();
-    } else if (tab.url.includes('crossclimb')) {
-        initializeCrossclimbControls();
-    } else {
-        initializeOtherGameControls();
-    }
-
     // Menu functionality
     const kebabButton = document.getElementById('kebabButton');
     const modalMenu = document.getElementById('modalMenu');
@@ -468,10 +596,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Event handlers
-    elements.cancelButton?.addEventListener('click', () => {
-        chrome.runtime.sendMessage({ action: 'cancelSolving' });
-    });
-
     elements.apiKeyHeader?.addEventListener('click', () => {
         elements.apiKeyContent?.classList.toggle('expanded');
         const arrow = elements.apiKeyHeader?.querySelector('span:last-child');
@@ -507,51 +631,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     elements.gameInfoHelpButton?.addEventListener('click', () => {
         elements.gameAboutSection?.classList.toggle('active');
     });
-});
-
-// Game control initializers
-function initializePinpointControls() {
-    elements.solvePinpoint?.addEventListener('click', () => {
-        chrome.runtime.sendMessage({
-            action: 'startSolving',
-            solveAction: 'solve',
-            requiresApiKey: API_KEY_REQUIRED_BUTTONS.includes(elements.solvePinpoint)
-        });
-    });
-
-    elements.inputStoredPinpoint?.addEventListener('click', () => {
-        chrome.runtime.sendMessage({
-            action: 'startSolving',
-            solveAction: 'inputStoredSolution',
-            requiresApiKey: API_KEY_REQUIRED_BUTTONS.includes(elements.inputStoredPinpoint)
-        });
-    });
-}
-
-function initializeCrossclimbControls() {
-    elements.solveCrossclimb?.addEventListener('click', () => {
-        chrome.runtime.sendMessage({
-            action: 'startSolving',
-            solveAction: 'solve',
-            requiresApiKey: API_KEY_REQUIRED_BUTTONS.includes(elements.solveCrossclimb)
-        });
-    });
-
-    elements.inputStoredCrossclimb?.addEventListener('click', () => {
-        chrome.runtime.sendMessage({
-            action: 'startSolving',
-            solveAction: 'inputStoredSolution',
-            requiresApiKey: API_KEY_REQUIRED_BUTTONS.includes(elements.inputStoredCrossclimb)
-        });
-    });
-}
-
-function initializeOtherGameControls() {
-    elements.solveButton?.addEventListener('click', () => {
-        chrome.runtime.sendMessage({
-            action: 'startSolving',
-            solveAction: 'solve',
-            requiresApiKey: API_KEY_REQUIRED_BUTTONS.includes(elements.solveButton)
-        });
-    });
-} 
+}); 
