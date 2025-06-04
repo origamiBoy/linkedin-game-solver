@@ -12,6 +12,7 @@ const state = {
     isRefreshing: false,
     refreshStartTime: null,
     activeButton: null,
+    viewPreference: 'list' // 'list' or 'grid'
 };
 
 // OpenAI API key should be stored in extension's storage
@@ -132,7 +133,8 @@ async function updatePopupState() {
                 statusType: state.statusType,
                 isReady: state.isReady,
                 solvingGameType: state.solvingGameType,
-                solvingWithApiKey: state.solvingWithApiKey
+                solvingWithApiKey: state.solvingWithApiKey,
+                viewPreference: state.viewPreference
             }
         }).catch(error => {
             // Ignore connection errors when popup is closed
@@ -449,6 +451,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     });
                 return;
             }
+
+            // Handle view preference update
+            if (request.action === 'updateViewPreference') {
+                state.viewPreference = request.viewPreference;
+                await persistState();
+                updatePopupState();
+                sendResponse({ success: true });
+                return;
+            }
         } catch (error) {
             state.statusMessage = `Error: ${error.message}`;
             state.statusType = 'error';
@@ -475,7 +486,9 @@ async function resetState() {
 
 // Listen for tab updates to detect game type and reset solving state
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-    if (changeInfo.status === 'complete' && tab.url && !tab.url.includes('/results/')) {
+    //manage switch to results page
+    //if (changeInfo.status === 'complete' && tab.url && !tab.url.includes('/results/')) {
+    if (changeInfo.status === 'complete' && tab.url) {
         await updateCurrentTab();
         await updatePopupState();
     }

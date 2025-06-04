@@ -5,17 +5,125 @@
   <style>
     body {
       width: 280px;
+      min-height: 100px;
+      max-height: 600px; /* Maximum height for browser extension popup */
       padding: 10px;
       font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
     }
     .header {
       display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+      padding: 0 5px;
+    }
+    .header-row {
+      display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .game-info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 8px;
+      background-color: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+    }
+    .game-info-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .game-info-icon {
+      width: 20px;
+      height: 20px;
+    }
+    .game-info-name {
+      font-size: 0.9em;
+      color: #495057;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .game-info-right {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .game-info-button {
+      width: 24px;
+      height: 24px;
+      background-color: transparent;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #495057;
+      transition: background-color 0.2s ease;
+    }
+    .game-info-button:hover {
+      background-color: #e9ecef;
+    }
+    .game-about-section {
+      display: none;
+      margin-top: 8px;
+      padding: 8px;
+      background-color: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: #495057;
+    }
+    .game-about-section.active {
+      display: block;
+    }
+    .app-icon {
+      width: 24px;
+      height: 24px;
     }
     .header h2 {
       margin: 8px 0;
+      font-size: 1.2em;
+    }
+    .header-button {
+      width: 24px;
+      height: 24px;
+      background-color: #f8f9fa;
+      border: 1px solid #ccc;
+      border-radius: 50%;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #495057;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .header-button:hover {
+      background-color: #e9ecef;
+      border-color: #495057;
+    }
+    .header-button.active {
+      background-color: #e9ecef;
+      border-color: #495057;
+      color: #000000;
     }
     .cancel-button {
       width: 60px;
@@ -305,7 +413,16 @@
       margin-left: 12px;
       color: #495057;
     }
-    /* Content Sections */
+    /* Content Management System */
+    .content-manager {
+      display: none;
+      position: relative;
+    }
+
+    .content-manager.active {
+      display: block;
+    }
+
     .content-section {
       display: none;
       padding: 15px;
@@ -314,7 +431,32 @@
       border-radius: 4px;
       margin-bottom: 10px;
       background-color: #f8f9fa;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
     }
+
+    .content-section.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Main Content Area */
+    .main-content {
+      display: none;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .main-content.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Content Sections */
     .content-header {
       display: flex;
       justify-content: space-between;
@@ -357,15 +499,267 @@
       font-size: 20px;
       color: #495057;
     }
+    /* Game Cards Styles */
+    .game-cards-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 10px;
+        padding: 10px 0px;
+        flex-grow: 1;
+        overflow-y: auto;
+    }
+
+    .game-cards-container.grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .game-cards-container.condensed {
+        gap: 5px;
+    }
+
+    .game-card {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        border-radius: 8px;
+        text-decoration: none;
+        color: inherit;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+        position: relative;
+        border: 1px solid #e0e0e0;
+    }
+
+    .game-card.condensed {
+        padding: 6px 10px;
+    }
+
+    .game-card.condensed .game-card-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .game-card.condensed .game-card-name {
+        font-size: 0.9em;
+    }
+
+    .game-card.condensed .game-card-tag {
+        font-size: 8px;
+        padding: 1px 4px;
+    }
+
+    .game-card:hover {
+        filter: brightness(0.95);
+        border-color: #bdbdbd;
+    }
+
+    .game-card.list {
+        flex-direction: row;
+        justify-content: flex-start;
+    }
+
+    .game-card.grid {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+    }
+
+    .game-card-icon {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .game-card.grid .game-card-icon {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 8px;
+    }
+
+    .game-card-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .game-card-content {
+        flex-grow: 1;
+        margin-left: 12px;
+        position: relative;
+    }
+
+    .game-card.grid .game-card-content {
+        margin-left: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .game-card-name {
+        font-weight: 500;
+        color: #000000;
+        margin: 0;
+        font-size: 1.1em;
+    }
+
+    .game-card-tags {
+        display: flex;
+        gap: 4px;
+    }
+
+    .game-card.list .game-card-tags {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        flex-direction: column;
+    }
+
+    .game-card.grid .game-card-tags {
+        flex-direction: row;
+        margin-top: 8px;
+        justify-content: center;
+    }
+
+    .game-card-tag {
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background-color: rgba(0, 0, 0, 0.1);
+        color: #495057;
+        text-align: center;
+    }
+
+    .game-card-tag.perfect {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .game-card-tag.ai {
+        background-color: #cce5ff;
+        color: #004085;
+    }
+
+    .view-toggle {
+        width: 24px;
+        height: 24px;
+        background-color: #f8f9fa;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        cursor: pointer;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #495057;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+        margin-left: 8px;
+    }
+
+    .view-toggle:hover {
+        background-color: #e9ecef;
+        border-color: #495057;
+    }
+
+    /* .view-toggle.active {
+        background-color: #e9ecef;
+        border-color: #495057;
+        color: #000000;
+    } */
+
+    /* Settings Section */
+    .settings-section {
+      display: none;
+      padding: 15px;
+      position: relative;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      background-color: #f8f9fa;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .settings-section.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Helpful Links Section */
+    .helpful-links {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .helpful-links h4 {
+        margin: 0 0 10px 0;
+        font-size: 0.9em;
+        color: #495057;
+    }
+
+    .helpful-links-container {
+        display: flex;
+        gap: 8px;
+    }
+
+    .helpful-link {
+        padding: 6px 12px;
+        background-color: #f8f9fa;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        color: #495057;
+        text-decoration: none;
+        font-size: 0.8em;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .helpful-link:hover {
+        background-color: #e9ecef;
+        border-color: #495057;
+    }
   </style>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
   <div class="header">
-    <h2>LinkedIn Puzzle Solver</h2>
-    <button class="kebab-button" id="kebabButton">
-      <p class="material-icons">more_vert</p>
-    </button>
+    <div class="header-row">
+      <div class="header-left">
+        <img src="../../icons/icon48.png" alt="App Icon" class="app-icon">
+        <h2>Solver</h2>
+      </div>
+      <div class="header-right">
+        <button class="header-button" id="homeButton" title="Home">
+          <p class="material-icons">home</p>
+        </button>
+        <button class="header-button" id="settingsButton" title="Settings">
+          <p class="material-icons">settings</p>
+        </button>
+        <button class="header-button" id="kebabButton" title="Menu">
+          <p class="material-icons">more_vert</p>
+        </button>
+      </div>
+    </div>
+    <div class="game-info-row" id="gameInfoRow" style="display: none;">
+      <div class="game-info-left">
+        <img id="gameInfoIcon" class="game-info-icon" alt="Game Icon">
+        <span id="gameInfoName" class="game-info-name"></span>
+      </div>
+      <div class="game-info-right">
+        <button class="game-info-button" id="gameInfoPuzzleButton" title="Show Game Controls">
+          <p class="material-icons">extension</p>
+        </button>
+        <button class="game-info-button" id="gameInfoHelpButton" title="Show Game Info">
+          <p class="material-icons">help_outline</p>
+        </button>
+      </div>
+    </div>
+    <div class="game-about-section" id="gameAboutSection"></div>
   </div>
 
   <!-- Modal Menu -->
@@ -384,89 +778,116 @@
     </div>
   </div>
 
-  <!-- Content Sections -->
-  <div class="content-section" id="aboutSection">
-    <div class="content-header">
-      <h3>About</h3>
-      <button class="close-button" data-section="about">
-        <p class="material-icons">close</p>
-      </button>
+  <!-- Content Manager -->
+  <div class="content-manager" id="contentManager">
+    <!-- Home Section -->
+    <div class="content-section" id="homeSection">
+      <div class="content-header">
+        <h3>Puzzle Links</h3>
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <button class="view-toggle" id="viewToggle" title="Toggle view">
+            <p class="material-icons">grid_view</p>
+          </button>
+        </div>
+      </div>
+      <p>Solver uses alternative puzzle links</p>
+      <div id="gameCardsContainer" class="game-cards-container">
+        <!-- Game cards will be dynamically inserted here -->
+      </div>
     </div>
-    <p>Can solve any LinkedIn puzzle game using solver algorithms or AI. Can save scores to LinkedIn account</p>
-  </div>
 
-  <div class="content-section" id="stepsSection">
-    <div class="content-header">
-      <h3>Use on LinkedIn</h3>
-      <button class="close-button" data-section="steps">
-        <p class="material-icons">close</p>
-      </button>
+    <!-- Settings Section -->
+    <div class="settings-section" id="settingsSection">
+      <div class="content-header">
+        <h3>Settings</h3>
+      </div>
+      <!-- API Key Section -->
+      <div class="api-key-section" id="apiKeySection">
+        <div class="api-key-header" id="apiKeyHeader">
+          <span>OpenAI API Key</span>
+          <span>&#9656;</span>
+        </div>
+        <div class="api-key-content" id="apiKeyContent">
+          <input type="password" id="apiKeyInput" placeholder="Enter OpenAI API Key">
+          <div class="api-key-actions">
+            <button class="primary-button" id="saveApiKey">Save Key</button>
+            <button class="primary-button delete-key-btn" id="deleteApiKey">Delete Key</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <p>Multiple steps are needed to have scores officially saved on your LinkedIn profile.</p>
-    <ol>
-      <li>Logged out of LinkedIn</li>
-      <li>Navigate to a valid puzzle link</li>
-      <li>Solve puzzle (may require multiple attempts and/or an API key)</li>
-      <li>Input direct solution if needed</li>
-      <li>Log in to save</li>
-      <li>Repeat the process for each puzzle</li>
-    </ol>
-  </div>
 
-  <div class="content-section" id="linksSection">
-    <div class="content-header">
-      <h3>Puzzle Links</h3>
-      <button class="close-button" data-section="links">
-        <p class="material-icons">close</p>
-      </button>
+    <!-- Other Content Sections -->
+    <div class="content-section" id="aboutSection">
+      <div class="content-header">
+        <h3>About</h3>
+        <button class="close-button" data-section="about">
+          <p class="material-icons">close</p>
+        </button>
+      </div>
+      <p>Can solve any LinkedIn puzzle game using solver algorithms or AI. Can save scores to LinkedIn account</p>
     </div>
-    <p>Solver uses alternative puzzle links</p>
-    <div class="game-links">
-      <a href="https://www.linkedin.com/games/view/queens/desktop/" target="_blank" class="small-link">Queens</a>
-      <a href="https://www.linkedin.com/games/view/zip/desktop/" target="_blank" class="small-link">Zip</a>
-      <a href="https://www.linkedin.com/games/view/tango/desktop/" target="_blank" class="small-link">Tango</a>
-      <a href="https://www.linkedin.com/games/view/pinpoint/desktop/" target="_blank" class="small-link">Pinpoint</a>
-      <a href="https://www.linkedin.com/games/view/crossclimb/desktop/" target="_blank" class="small-link">Crossclimb</a>
-    </div>
-  </div>
 
-  <div class="game-info-container">
-    <div class="game-info">
-      <div id="gameTag" class="game-tag">Game detected: ...</div>
-      <div id="solvingStatus" class="solving-status"></div>
+    <div class="content-section" id="stepsSection">
+      <div class="content-header">
+        <h3>Use on LinkedIn</h3>
+        <button class="close-button" data-section="steps">
+          <p class="material-icons">close</p>
+        </button>
+      </div>
+      <p>Multiple steps are needed to have scores officially saved on your LinkedIn profile.</p>
+      <ol>
+        <li>Logged out of LinkedIn</li>
+        <li>Navigate to a valid puzzle link</li>
+        <li>Solve puzzle (may require multiple attempts and/or an API key)</li>
+        <li>Input direct solution if needed</li>
+        <li>Log in to save</li>
+        <li>Repeat the process for each puzzle</li>
+      </ol>
     </div>
-    <button class="cancel-button" id="cancelButton" disabled>Cancel</button>
-  </div>
-  <button class="primary-button" id="solveButton">Solve Puzzle</button>
-  
-  <!-- Game-specific controls -->
-  <div id="pinpointControls" class="game-controls">
-    <button class="primary-button" id="solvePinpoint">Solve Puzzle</button>
-    <button class="primary-button" id="inputStoredPinpoint">Input Stored Solution</button>
-  </div>
 
-  <!-- Crossclimb controls -->
-  <div id="crossclimbControls" class="game-controls">
-    <button class="primary-button" id="solveCrossclimb">Solve Puzzle</button>
-    <button class="primary-button" id="inputStoredCrossclimb">Input Stored Solution</button>
-  </div>
-
-  <!-- API Key Section -->
-  <div class="api-key-section" id="apiKeySection">
-    <div class="api-key-header" id="apiKeyHeader">
-      <span>OpenAI API Key</span>
-      <span>&#9656;</span>
-    </div>
-    <div class="api-key-content" id="apiKeyContent">
-      <input type="password" id="apiKeyInput" placeholder="Enter OpenAI API Key">
-      <div class="api-key-actions">
-        <button class="primary-button" id="saveApiKey">Save Key</button>
-        <button class="primary-button delete-key-btn" id="deleteApiKey">Delete Key</button>
+    <!-- Links Section -->
+    <div class="content-section" id="linksSection">
+      <div class="content-header">
+        <h3>Puzzle Links</h3>
+        <button class="close-button" data-section="links">
+          <p class="material-icons">close</p>
+        </button>
+      </div>
+      <p>Alternative puzzle links and helpful resources</p>
+      <div id="linksGameCardsContainer" class="game-cards-container condensed">
+        <!-- Game cards will be dynamically inserted here -->
+      </div>
+      <div class="helpful-links">
+        <h4>Helpful Links</h4>
+        <div class="helpful-links-container">
+          <a href="https://www.linkedin.com/games" target="_blank" class="helpful-link">Games Page</a>
+          <a href="https://www.linkedin.com/login" target="_blank" class="helpful-link">Login Page</a>
+        </div>
       </div>
     </div>
   </div>
 
-  <div id="status" class="ready">Ready</div>
+  <!-- Main Content Area -->
+  <div class="main-content" id="mainContent">
+    <button class="cancel-button" id="cancelButton" disabled>Cancel</button>
+    <button class="primary-button" id="solveButton">Solve Puzzle</button>
+    
+    <!-- Game-specific controls -->
+    <div id="pinpointControls" class="game-controls">
+      <button class="primary-button" id="solvePinpoint">Solve Puzzle</button>
+      <button class="primary-button" id="inputStoredPinpoint">Input Stored Solution</button>
+    </div>
+
+    <!-- Crossclimb controls -->
+    <div id="crossclimbControls" class="game-controls">
+      <button class="primary-button" id="solveCrossclimb">Solve Puzzle</button>
+      <button class="primary-button" id="inputStoredCrossclimb">Input Stored Solution</button>
+    </div>
+
+    <div id="status" class="ready">Ready</div>
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html> 
