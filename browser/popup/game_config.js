@@ -12,13 +12,13 @@ const GAME_CONFIG = {
             perfect: true,
             ai: false
         },
-        about: "A puzzle game where you place queens on a chess board without them attacking each other.",
+        about: "Crown each region.",
         controls: [
             {
                 name: "Solve",
                 id: "solve-button",
                 icon: "play_arrow",
-                description: "Solves the puzzle, first tried guaranteed",
+                description: "Solves the puzzle. Simple as that.",
                 solveAction: "solve",
                 requirements: {
                     ai: false,
@@ -39,13 +39,13 @@ const GAME_CONFIG = {
             perfect: true,
             ai: false
         },
-        about: "A puzzle game where you connect dots to form shapes.",
+        about: "Complete the path.",
         controls: [
             {
                 name: "Solve",
                 id: "solve-button",
                 icon: "play_arrow",
-                description: "Solves the puzzle, first tried guaranteed",
+                description: "Solves the puzzle. Simple as that.",
                 solveAction: "solve",
                 requirements: {
                     ai: false,
@@ -66,13 +66,13 @@ const GAME_CONFIG = {
             perfect: true,
             ai: false
         },
-        about: "A word puzzle where you find words that match the given clues.",
+        about: "Harmonize the grid.",
         controls: [
             {
                 name: "Solve",
                 id: "solve-button",
                 icon: "play_arrow",
-                description: "Solves the puzzle, first tried guaranteed",
+                description: "Solves the puzzle. Simple as that.",
                 solveAction: "solve",
                 requirements: {
                     ai: false,
@@ -93,13 +93,13 @@ const GAME_CONFIG = {
             perfect: true,
             ai: true
         },
-        about: "A word search puzzle where you find words in a grid of letters.",
+        about: "Guess the category.",
         controls: [
             {
                 name: "Solve",
                 id: "solve-button",
                 icon: "play_arrow",
-                description: "Solve the current puzzle",
+                description: "Gets, solves, and saves the solution",
                 solveAction: "solve",
                 requirements: {
                     ai: true,
@@ -110,7 +110,7 @@ const GAME_CONFIG = {
                 name: "Input Stored",
                 id: "input-stored-button",
                 icon: "input",
-                description: "Gets, solves, and saves the solution",
+                description: "Input a previously solved solution",
                 solveAction: "inputStoredSolution",
                 requirements: {
                     ai: false,
@@ -131,7 +131,7 @@ const GAME_CONFIG = {
             perfect: false,
             ai: true
         },
-        about: "A word chain puzzle where you connect words by changing one letter at a time. The AI solver uses OpenAI to find solutions.",
+        about: "Unlock a trivia ladder.",
         controls: [
             {
                 name: "Solve",

@@ -754,64 +754,207 @@
     #gameControlsContainer {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 10px;
       margin: 10px 0;
     }
 
-    .game-control-button {
+    .controls-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       width: 100%;
-      padding: 10px;
-      margin: 0;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 8px;
+      max-width: 100%;
+    }
+
+    .control-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid #e0e0e0;
+      background-color: transparent;
+      position: relative;
+      min-width: 80px;
+    }
+
+    .control-card:not(:disabled):hover {
+      border-color: #0077b5;
+      background-color: #f8f9fa;
+    }
+
+    .control-card.selected {
+      background-color: #0077b5;
+      border-color: #0077b5;
+      color: white;
+    }
+
+    .control-card:disabled {
+      background-color: #f5f5f5;
+      border-color: #e0e0e0;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .control-card .material-icons {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+
+    .control-card span {
+      font-size: 12px;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .control-description {
+      display: none;
+      padding: 8px 12px;
+      background-color: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: #495057;
+      min-height: 20px;
+    }
+
+    .control-description.visible {
+      display: block;
+    }
+
+    .controls-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* Base square icon button style */
+    .icon-button {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background-color: #f8f9fa;
+      border: 1px solid #e0e0e0;
+    }
+
+    .icon-button:hover:not(:disabled) {
+      background-color: #e9ecef;
+      border-color: #495057;
+    }
+
+    .icon-button:disabled {
+      background-color: #cccccc;
+      color: #666666;
+      border-color: #e0e0e0;
+      cursor: not-allowed;
+    }
+
+    .icon-button .material-icons {
+      font-size: 18px;
+    }
+
+    /* Refresh button specific style */
+    .refresh-button {
+      color: #495057;
+    }
+
+    /* Cancel button specific style */
+    .cancel-icon-button {
+      background-color: #ffebee;
+      border-color: #ffcdd2;
+      color: #d32f2f;
+    }
+
+    .cancel-icon-button:hover:not(:disabled) {
+      background-color: #ffcdd2;
+      border-color: #ef9a9a;
+    }
+
+    .controls-actions .start-button {
+      flex: 2;
+      height: 36px;
+      padding: 0 16px;
       background-color: #0077b5;
       color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      transition: background-color 0.2s ease, opacity 0.2s ease;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
+      transition: all 0.2s ease;
     }
 
-    .game-control-button:hover:not(:disabled) {
+    .controls-actions .start-button:hover:not(:disabled) {
       background-color: #005582;
     }
 
-    .game-control-button:disabled {
+    .controls-actions .start-button:disabled {
       background-color: #cccccc;
       color: #666666;
-      opacity: 0.7;
+      cursor: not-allowed;
     }
 
-    .game-control-button.api-key-required:disabled::after {
-      content: " (API Key Required)";
-      font-size: 0.9em;
-      font-style: italic;
-      color: #666666;
+    .controls-actions .cancel-button {
+      flex: 1;
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      background-color: #ffebee;
+      color: #d32f2f;
+      border: 1px solid #ffcdd2;
+      cursor: pointer;
     }
 
-    .game-control-button.solving {
+    .controls-actions .cancel-button:hover:not(:disabled) {
+      background-color: #ffcdd2;
+      border-color: #ef9a9a;
+    }
+
+    .controls-actions .cancel-button:disabled {
       background-color: #cccccc;
       color: #666666;
-      opacity: 0.7;
+      border: none;
+      cursor: not-allowed;
     }
 
-    .game-control-button .material-icons {
+    .controls-actions .material-icons {
       font-size: 18px;
     }
 
-    /* Cancel Button Styles */
+    /* Cancel Button Base Styles (shared by all cancel buttons) */
     .game-control-button.cancel {
-        background-color: #f5f5f5;
-        color: #9e9e9e;
-        border: 1px solid #e0e0e0;
-        margin-top: 8px;
+        background-color: #ffebee;
+        color: #d32f2f;
+        border: 1px solid #ffcdd2;
+        cursor: pointer;
+        transition: all 0.2s ease;
     }
 
     .game-control-button.cancel:hover:not(:disabled) {
-        background-color: #ffebee;
-        border-color: #ffcdd2;
+        background-color: #ffcdd2;
+        border-color: #ef9a9a;
     }
 
     .game-control-button.cancel:disabled {
@@ -819,17 +962,71 @@
         color: #9e9e9e;
         border-color: #e0e0e0;
         cursor: not-allowed;
+        opacity: 0.7;
     }
 
-    .game-control-button.cancel:not(:disabled) {
+    /* Original Cancel Button Style (for incorrect URL and home page) */
+    .game-control-button.cancel {
+        width: 100%;
+        padding: 10px;
+        margin-top: 8px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    /* Controls Actions Cancel Button Style (for correct URL scenario) */
+    .controls-actions .cancel-button {
+        flex: 1;
+        height: 36px;
+        padding: 0 16px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s ease;
         background-color: #ffebee;
         color: #d32f2f;
-        border-color: #ffcdd2;
+        border: 1px solid #ffcdd2;
+        cursor: pointer;
     }
 
-    .game-control-button.cancel:not(:disabled):hover {
+    .controls-actions .cancel-button:hover:not(:disabled) {
         background-color: #ffcdd2;
         border-color: #ef9a9a;
+    }
+
+    .controls-actions .cancel-button:disabled {
+        background-color: #cccccc;
+        color: #666666;
+        border: none;
+        cursor: not-allowed;
+    }
+
+    .controls-actions .material-icons {
+        font-size: 18px;
+    }
+
+    /* Cancel Icon Button Style */
+    .cancel-icon-button {
+      background-color: #ffebee !important;
+      border-color: #ffcdd2 !important;
+      color: #d32f2f !important;
+    }
+
+    .cancel-icon-button:hover:not(:disabled) {
+      background-color: #ffcdd2 !important;
+      border-color: #ef9a9a !important;
+    }
+
+    .cancel-icon-button:disabled {
+      background-color: #cccccc !important;
+      color: #666666 !important;
+      border-color: #e0e0e0 !important;
+      cursor: not-allowed;
     }
 
   </style>
@@ -979,7 +1176,27 @@
 
   <!-- Main Content Area -->
   <div class="main-content" id="mainContent">
-    <div id="gameControlsContainer" class="game-controls-container"></div>
+    <div id="gameControlsContainer" class="game-controls-container">
+      <div class="controls-container">
+        <div class="controls-grid" id="controlsGrid">
+          <!-- Control cards will be dynamically inserted here -->
+        </div>
+        <div class="control-description" id="controlDescription"></div>
+      </div>
+      <div class="controls-actions">
+        <button class="refresh-button" id="refreshButton" title="Refresh Page">
+          <span class="material-icons">refresh</span>
+        </button>
+        <button class="start-button" id="startButton" disabled>
+          <span class="material-icons">play_arrow</span>
+          <span>Start</span>
+        </button>
+        <button class="cancel-button" id="cancelButton" disabled>
+          <span class="material-icons">close</span>
+          <span>Cancel</span>
+        </button>
+      </div>
+    </div>
     <div id="singleGameCardContainer" class="single-game-card-container"></div>
     <div id="status" class="ready">Ready</div>
   </div>

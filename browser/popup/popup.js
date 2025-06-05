@@ -7,6 +7,9 @@ import('./game_config.js').then(module => {
 // Global content manager instance
 let contentManager;
 
+// Global state for selected control
+let selectedControl = null;
+
 // Initialize DOM elements
 const elements = {
     status: document.getElementById('status'),
@@ -102,6 +105,202 @@ function createGameCard(gameId, gameConfig, viewMode, showAbout = false) {
     return card;
 }
 
+// Function to create a control card
+function createControlCard(control, gameType, state) {
+    const card = document.createElement('button');
+    card.className = 'control-card';
+    card.id = control.id;
+    card.innerHTML = `
+        <span class="material-icons">${control.icon}</span>
+        <span>${control.name}</span>
+    `;
+
+    // Set button state
+    const requiresApiKey = control.requirements?.ai || false;
+    const requiresStored = control.requirements?.stored || false;
+    const isReady = state.isReady && (!requiresApiKey || state.hasApiKey);
+
+    card.disabled = state.isSolving || !isReady;
+    card.classList.toggle('api-key-required', requiresApiKey && !state.hasApiKey);
+
+    // Add click handler for radio button behavior
+    card.addEventListener('click', () => {
+        if (card.disabled) return;
+
+        // If this card is already selected, deselect it
+        if (selectedControl === control) {
+            selectedControl = null;
+            card.classList.remove('selected');
+            updateControlDescription(null);
+            updateStartButton();
+            return;
+        }
+
+        // Deselect previously selected card if any
+        const previouslySelected = document.querySelector('.control-card.selected');
+        if (previouslySelected) {
+            previouslySelected.classList.remove('selected');
+        }
+
+        // Select this card
+        selectedControl = control;
+        card.classList.add('selected');
+        updateControlDescription(control);
+        updateStartButton();
+    });
+
+    return card;
+}
+
+// Function to update control description
+function updateControlDescription(control) {
+    const descriptionElement = document.getElementById('controlDescription');
+    if (!descriptionElement) return;
+
+    if (control && control.description) {
+        descriptionElement.textContent = control.description;
+        descriptionElement.classList.add('visible');
+    } else {
+        descriptionElement.textContent = '';
+        descriptionElement.classList.remove('visible');
+    }
+}
+
+// Function to update start button state
+function updateStartButton() {
+    const startButton = document.getElementById('startButton');
+    if (!startButton) return;
+
+    startButton.disabled = !selectedControl;
+}
+
+// Function to create a cancel button
+function createCancelButton(state, isIconOnly = false) {
+    const button = document.createElement('button');
+    button.className = isIconOnly ? 'icon-button cancel-icon-button' : 'game-control-button cancel';
+    button.id = 'cancelButton';
+    button.title = 'Cancel';
+    button.innerHTML = isIconOnly ?
+        '<span class="material-icons">close</span>' :
+        `<span class="material-icons">close</span>
+        <span>Cancel</span>`;
+
+    // Set button state - enabled only when solving
+    button.disabled = !state.isSolving;
+
+    // Add click handler
+    button.addEventListener('click', () => {
+        if (state.isSolving) {
+            chrome.runtime.sendMessage({ action: 'cancelSolving' });
+        }
+    });
+
+    return button;
+}
+
+// Function to create controls container structure
+function createControlsContainer() {
+    const controlsContainer = document.createElement('div');
+    controlsContainer.className = 'controls-container';
+
+    const controlsGrid = document.createElement('div');
+    controlsGrid.className = 'controls-grid';
+    controlsGrid.id = 'controlsGrid';
+
+    const controlDescription = document.createElement('div');
+    controlDescription.className = 'control-description';
+    controlDescription.id = 'controlDescription';
+
+    const controlsActions = document.createElement('div');
+    controlsActions.className = 'controls-actions';
+
+    // Create action buttons
+    const refreshButton = document.createElement('button');
+    refreshButton.className = 'icon-button refresh-button';
+    refreshButton.id = 'refreshButton';
+    refreshButton.title = 'Refresh Page';
+    refreshButton.innerHTML = '<span class="material-icons">refresh</span>';
+
+    const startButton = document.createElement('button');
+    startButton.className = 'start-button';
+    startButton.id = 'startButton';
+    startButton.disabled = true;
+    startButton.innerHTML = `
+        <span class="material-icons">play_arrow</span>
+        <span>Start</span>
+    `;
+
+    // Create icon-only cancel button for controls container
+    const cancelButton = createCancelButton({ isSolving: false }, true);
+
+    // Assemble the controls
+    controlsActions.appendChild(refreshButton);
+    controlsActions.appendChild(startButton);
+    controlsActions.appendChild(cancelButton);
+
+    controlsContainer.appendChild(controlsGrid);
+    controlsContainer.appendChild(controlDescription);
+
+    return { controlsContainer, controlsActions };
+}
+
+// Function to update game controls
+function updateGameControls(gameConfig, state) {
+    const gameControlsContainer = document.getElementById('gameControlsContainer');
+    if (!gameControlsContainer) return;
+
+    // Clear existing controls
+    gameControlsContainer.innerHTML = '';
+
+    // Create new controls container structure
+    const { controlsContainer, controlsActions } = createControlsContainer();
+    gameControlsContainer.appendChild(controlsContainer);
+    gameControlsContainer.appendChild(controlsActions);
+
+    // Get references to the newly created elements
+    const controlsGrid = document.getElementById('controlsGrid');
+    const refreshButton = document.getElementById('refreshButton');
+    const startButton = document.getElementById('startButton');
+    const cancelButton = document.getElementById('cancelButton');
+
+    if (!controlsGrid || !refreshButton || !startButton || !cancelButton) return;
+
+    // Reset selected control state
+    selectedControl = null;
+    updateControlDescription(null);
+    updateStartButton();
+
+    // Create control cards
+    gameConfig.controls.forEach(control => {
+        const card = createControlCard(control, state.gameType, state);
+        controlsGrid.appendChild(card);
+    });
+
+    // Set up refresh button
+    refreshButton.onclick = () => {
+        chrome.tabs.update({ url: gameConfig.url });
+    };
+
+    // Set up start button
+    startButton.onclick = () => {
+        if (!selectedControl) return;
+
+        chrome.runtime.sendMessage({
+            action: 'startSolving',
+            solveAction: selectedControl.solveAction,
+            requiresApiKey: selectedControl.requirements?.ai || false
+        });
+    };
+
+    // Set up cancel button
+    cancelButton.disabled = !state.isSolving;
+    cancelButton.onclick = () => {
+        if (state.isSolving) {
+            chrome.runtime.sendMessage({ action: 'cancelSolving' });
+        }
+    };
+}
+
 // Function to create a game control button
 function createGameControlButton(control, gameType, state) {
     const button = document.createElement('button');
@@ -133,29 +332,6 @@ function createGameControlButton(control, gameType, state) {
     return button;
 }
 
-// Function to create a cancel button
-function createCancelButton(state) {
-    const button = document.createElement('button');
-    button.className = 'game-control-button cancel';
-    button.id = 'cancelButton';
-    button.innerHTML = `
-        <span class="material-icons">close</span>
-        <span>Cancel</span>
-    `;
-
-    // Set button state - enabled only when solving
-    button.disabled = !state.isSolving;
-
-    // Add click handler
-    button.addEventListener('click', () => {
-        if (state.isSolving) {
-            chrome.runtime.sendMessage({ action: 'cancelSolving' });
-        }
-    });
-
-    return button;
-}
-
 // Function to update game cards view
 async function updateGameCardsView(viewMode, container = 'gameCardsContainer') {
     // Wait for GAME_CONFIG to be loaded
@@ -182,7 +358,7 @@ async function updateGameCardsView(viewMode, container = 'gameCardsContainer') {
 
     // Add cancel button at the top if solving
     if (state?.isSolving && container === 'gameCardsContainer') {
-        const cancelButton = createCancelButton(state);
+        const cancelButton = createCancelButton(state, false);
         const cancelContainer = document.createElement('div');
         cancelContainer.style.marginBottom = '8px';
         cancelContainer.appendChild(cancelButton);
@@ -254,31 +430,30 @@ const updateUI = async (state) => {
     const singleGameCardContainer = document.getElementById('singleGameCardContainer');
     const gameCardsContainer = document.getElementById('gameCardsContainer');
 
-    // Handle cancel button visibility
+    // Handle cancel button visibility for non-correct URL scenarios
     if (state.isSolving) {
-        const cancelButton = createCancelButton(state);
+        const cancelButton = createCancelButton(state, false);
 
-        // If we're on the home view, show cancel button at the top of game cards
+        // If we're on the home view, add cancel button to game cards container
         if (contentManager?.isSectionActive('home') && gameCardsContainer) {
             // Remove any existing cancel button
             const existingCancel = gameCardsContainer.querySelector('.game-control-button.cancel');
             if (existingCancel) {
-                existingCancel.remove();
+                existingCancel.parentElement.remove();
             }
-
-            // Create a container for the cancel button
+            // Add cancel button to game cards container
             const cancelContainer = document.createElement('div');
             cancelContainer.style.marginBottom = '8px';
             cancelContainer.appendChild(cancelButton);
-
-            // Insert at the top of the game cards container
             gameCardsContainer.insertBefore(cancelContainer, gameCardsContainer.firstChild);
         }
     } else {
         // Remove cancel button from game cards if not solving
-        const existingCancel = gameCardsContainer?.querySelector('.game-control-button.cancel');
-        if (existingCancel) {
-            existingCancel.remove();
+        if (gameCardsContainer) {
+            const existingCancel = gameCardsContainer.querySelector('.game-control-button.cancel');
+            if (existingCancel) {
+                existingCancel.parentElement.remove();
+            }
         }
     }
 
@@ -292,18 +467,9 @@ const updateUI = async (state) => {
             if (gameConfig) {
                 if (state.hasCorrectUrl) {
                     // Show game controls when URL is correct
-                    gameControlsContainer.style.display = 'flex';
+                    gameControlsContainer.style.display = 'block';
                     singleGameCardContainer.style.display = 'none';
-
-                    // Create control buttons based on game config
-                    gameConfig.controls.forEach(control => {
-                        const button = createGameControlButton(control, state.gameType, state);
-                        gameControlsContainer.appendChild(button);
-                    });
-
-                    // Add cancel button after game controls
-                    const cancelButton = createCancelButton(state);
-                    gameControlsContainer.appendChild(cancelButton);
+                    updateGameControls(gameConfig, state);
                 } else {
                     // Show single game card when URL is incorrect but game is detected
                     gameControlsContainer.style.display = 'none';
@@ -312,9 +478,9 @@ const updateUI = async (state) => {
                     const card = createGameCard(state.gameType.toLowerCase(), gameConfig, 'grid', true);
                     singleGameCardContainer.appendChild(card);
 
-                    // Add cancel button after game card if solving
+                    // Add full cancel button after game card if solving
                     if (state.isSolving) {
-                        const cancelButton = createCancelButton(state);
+                        const cancelButton = createCancelButton(state, false);
                         const cancelContainer = document.createElement('div');
                         cancelContainer.style.marginTop = '8px';
                         cancelContainer.appendChild(cancelButton);
