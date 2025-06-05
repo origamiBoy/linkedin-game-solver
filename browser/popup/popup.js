@@ -13,22 +13,13 @@ let selectedControl = null;
 // Initialize DOM elements
 const elements = {
     status: document.getElementById('status'),
-    gameTag: document.getElementById('gameTag'),
     solvingStatus: document.getElementById('solvingStatus'),
-    cancelButton: document.getElementById('cancelButton'),
-    solveButton: document.getElementById('solveButton'),
     apiKeySection: document.getElementById('apiKeySection'),
     apiKeyContent: document.getElementById('apiKeyContent'),
     apiKeyHeader: document.getElementById('apiKeyHeader'),
     apiKeyInput: document.getElementById('apiKeyInput'),
     saveApiKey: document.getElementById('saveApiKey'),
     deleteApiKey: document.getElementById('deleteApiKey'),
-    pinpointControls: document.getElementById('pinpointControls'),
-    solvePinpoint: document.getElementById('solvePinpoint'),
-    inputStoredPinpoint: document.getElementById('inputStoredPinpoint'),
-    crossclimbControls: document.getElementById('crossclimbControls'),
-    solveCrossclimb: document.getElementById('solveCrossclimb'),
-    inputStoredCrossclimb: document.getElementById('inputStoredCrossclimb'),
     viewToggle: document.getElementById('viewToggle'),
     gameCardsContainer: document.getElementById('gameCardsContainer'),
     gameInfoRow: document.getElementById('gameInfoRow'),
@@ -39,12 +30,6 @@ const elements = {
     gameAboutSection: document.getElementById('gameAboutSection'),
     linksGameCardsContainer: document.getElementById('linksGameCardsContainer')
 };
-
-// Array of buttons that require an API key
-const API_KEY_REQUIRED_BUTTONS = [elements.solvePinpoint, elements.solveCrossclimb];
-
-// Array of all solve buttons
-const SOLVE_BUTTONS = [elements.solveButton, elements.solvePinpoint, elements.inputStoredPinpoint, elements.solveCrossclimb, elements.inputStoredCrossclimb];
 
 // Helper function to show status
 function showStatus(message, type = 'ready') {
@@ -301,36 +286,7 @@ function updateGameControls(gameConfig, state) {
     };
 }
 
-// Function to create a game control button
-function createGameControlButton(control, gameType, state) {
-    const button = document.createElement('button');
-    button.className = 'game-control-button';
-    button.id = control.id;
-    button.innerHTML = `
-        <span class="material-icons">${control.icon}</span>
-        <span>${control.name}</span>
-    `;
 
-    // Set button state
-    const requiresApiKey = control.requirements?.ai || false;
-    const requiresStored = control.requirements?.stored || false;
-    const isReady = state.isReady && (!requiresApiKey || state.hasApiKey);
-
-    button.disabled = state.isSolving || !isReady;
-    button.classList.toggle('api-key-required', requiresApiKey && !state.hasApiKey);
-    button.classList.toggle('solving', state.isSolving);
-
-    // Add click handler
-    button.addEventListener('click', () => {
-        chrome.runtime.sendMessage({
-            action: 'startSolving',
-            solveAction: control.solveAction,
-            requiresApiKey: requiresApiKey
-        });
-    });
-
-    return button;
-}
 
 // Function to update game cards view
 async function updateGameCardsView(viewMode, container = 'gameCardsContainer') {
@@ -420,11 +376,6 @@ const updateUI = async (state) => {
         }
     }
 
-    // Update game tag
-    if (elements.gameTag) {
-        elements.gameTag.textContent = `Game detected: ${state.gameType}`;
-    }
-
     // Update game controls and single game card
     const gameControlsContainer = document.getElementById('gameControlsContainer');
     const singleGameCardContainer = document.getElementById('singleGameCardContainer');
@@ -491,51 +442,7 @@ const updateUI = async (state) => {
         }
     }
 
-    // Update solve button state
-    if (elements.solveButton) {
-        // Pinpoint and Crossclimb have apikeys section
-        if (state.gameType === 'Pinpoint' || state.gameType === 'Crossclimb') {
-            elements.solveButton.style.display = 'none';
-            if (elements.apiKeySection) {
-                elements.apiKeySection.style.display = 'block';
-            }
 
-            if (state.gameType === 'Pinpoint') {
-                if (elements.pinpointControls) {
-                    elements.pinpointControls.style.display = 'block';
-                }
-                if (elements.crossclimbControls) {
-                    elements.crossclimbControls.style.display = 'none';
-                }
-                if (elements.solvePinpoint) {
-                    elements.solvePinpoint.disabled = !state.isReady || !state.hasApiKey;
-                    elements.solvePinpoint.classList.toggle('api-key-required', !state.hasApiKey);
-                }
-            } else if (state.gameType === 'Crossclimb') {
-                if (elements.pinpointControls) {
-                    elements.pinpointControls.style.display = 'none';
-                }
-                if (elements.crossclimbControls) {
-                    elements.crossclimbControls.style.display = 'block';
-                }
-                if (elements.solveCrossclimb) {
-                    elements.solveCrossclimb.disabled = !state.isReady || !state.hasApiKey;
-                    elements.solveCrossclimb.classList.toggle('api-key-required', !state.hasApiKey);
-                }
-            }
-        } else {
-            elements.solveButton.style.display = 'block';
-            if (elements.pinpointControls) {
-                elements.pinpointControls.style.display = 'none';
-            }
-            if (elements.crossclimbControls) {
-                elements.crossclimbControls.style.display = 'none';
-            }
-            if (elements.apiKeySection) {
-                elements.apiKeySection.style.display = 'none';
-            }
-        }
-    }
 
     // Update API key section
     if (elements.deleteApiKey) {
