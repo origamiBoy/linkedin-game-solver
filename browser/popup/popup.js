@@ -1,7 +1,12 @@
 // Import game config
 let GAME_CONFIG;
-import('./game_config.js').then(module => {
+let configLoaded = false;
+
+// Initialize config loading
+const configPromise = import('./game_config.js').then(module => {
     GAME_CONFIG = module.default;
+    configLoaded = true;
+    return GAME_CONFIG;
 });
 
 // Global content manager instance
@@ -28,8 +33,17 @@ const elements = {
     gameInfoPuzzleButton: document.getElementById('gameInfoPuzzleButton'),
     gameInfoHelpButton: document.getElementById('gameInfoHelpButton'),
     gameAboutSection: document.getElementById('gameAboutSection'),
-    linksGameCardsContainer: document.getElementById('linksGameCardsContainer')
+    linksGameCardsContainer: document.getElementById('linksGameCardsContainer'),
+    headerRow: document.getElementById('headerRow')
 };
+
+// Helper function to ensure config is loaded
+async function ensureConfigLoaded() {
+    if (!configLoaded) {
+        await configPromise;
+    }
+    return GAME_CONFIG;
+}
 
 // Helper function to show status
 function showStatus(message, type = 'ready') {
@@ -39,11 +53,31 @@ function showStatus(message, type = 'ready') {
     }
 }
 
+// Helper function to show API key status
+function showApiKeyStatus(message, type = 'success') {
+    const apiKeyStatus = document.getElementById('apiKeyStatus');
+    if (apiKeyStatus) {
+        apiKeyStatus.textContent = message;
+        apiKeyStatus.className = `api-key-status ${type}`;
+    }
+    setTimeout(() => {
+        apiKeyStatus.textContent = '';
+    }, 3000);
+}
+
 // Function to create game card HTML for grid/list views
-function createGameCard(gameId, gameConfig, viewMode, showAbout = false) {
+function createGameCard(gameId, gameConfig, viewMode, showAbout = false, newTab = true) {
     const card = document.createElement('a');
     card.href = gameConfig.url;
-    card.target = '_blank';
+    if (newTab) {
+        card.target = '_blank';
+    }
+    else {
+        card.addEventListener('click', (e) => {
+            e.preventDefault();
+            chrome.tabs.update({ url: gameConfig.url });
+        });
+    }
     card.className = `game-card ${viewMode}`;
     card.style.backgroundColor = gameConfig.backgroundColor;
 
@@ -103,10 +137,19 @@ function createControlCard(control, gameType, state) {
     // Set button state
     const requiresApiKey = control.requirements?.ai || false;
     const requiresStored = control.requirements?.stored || false;
-    const isReady = state.isReady && (!requiresApiKey || state.hasApiKey);
+    const isReady = state?.isReady && (!requiresApiKey || state?.hasApiKey);
 
-    card.disabled = state.isSolving || !isReady;
-    card.classList.toggle('api-key-required', requiresApiKey && !state.hasApiKey);
+    // If button is disabled for non-solving reasons, unselect it
+    if (!isReady && !state?.isSolving) {
+        if (selectedControl === control) {
+            selectedControl = null;
+            updateControlDescription(null);
+            updateStartButton();
+        }
+    }
+
+    card.disabled = state?.isSolving || !isReady;
+    card.classList.toggle('api-key-required', requiresApiKey && !state?.hasApiKey);
 
     // Add click handler for radio button behavior
     card.addEventListener('click', () => {
@@ -144,10 +187,10 @@ function updateControlDescription(control) {
 
     if (control && control.description) {
         descriptionElement.textContent = control.description;
-        descriptionElement.classList.add('visible');
+        descriptionElement.classList.add('has-selection');
     } else {
-        descriptionElement.textContent = '';
-        descriptionElement.classList.remove('visible');
+        descriptionElement.textContent = 'Select a solver button';
+        descriptionElement.classList.remove('has-selection');
     }
 }
 
@@ -171,11 +214,11 @@ function createCancelButton(state, isIconOnly = false) {
         <span>Cancel</span>`;
 
     // Set button state - enabled only when solving
-    button.disabled = !state.isSolving;
+    button.disabled = !state?.isSolving;
 
     // Add click handler
     button.addEventListener('click', () => {
-        if (state.isSolving) {
+        if (state?.isSolving) {
             chrome.runtime.sendMessage({ action: 'cancelSolving' });
         }
     });
@@ -230,7 +273,10 @@ function createControlsContainer() {
 }
 
 // Function to update game controls
-function updateGameControls(gameConfig, state) {
+async function updateGameControls(gameConfig, state) {
+    // Ensure config is loaded before proceeding
+    await ensureConfigLoaded();
+
     const gameControlsContainer = document.getElementById('gameControlsContainer');
     if (!gameControlsContainer) return;
 
@@ -250,14 +296,15 @@ function updateGameControls(gameConfig, state) {
 
     if (!controlsGrid || !refreshButton || !startButton || !cancelButton) return;
 
-    // Reset selected control state
-    selectedControl = null;
-    updateControlDescription(null);
-    updateStartButton();
-
     // Create control cards
     gameConfig.controls.forEach(control => {
-        const card = createControlCard(control, state.gameType, state);
+        const card = createControlCard(control, state?.gameType, state);
+        // If this control was previously selected, restore its selected state
+        if (selectedControl && selectedControl.id === control.id) {
+            card.classList.add('selected');
+            updateControlDescription(control);
+            startButton.disabled = false; // Enable start button if control is selected
+        }
         controlsGrid.appendChild(card);
     });
 
@@ -278,29 +325,18 @@ function updateGameControls(gameConfig, state) {
     };
 
     // Set up cancel button
-    cancelButton.disabled = !state.isSolving;
+    cancelButton.disabled = !state?.isSolving;
     cancelButton.onclick = () => {
-        if (state.isSolving) {
+        if (state?.isSolving) {
             chrome.runtime.sendMessage({ action: 'cancelSolving' });
         }
     };
 }
 
-
-
 // Function to update game cards view
 async function updateGameCardsView(viewMode, container = 'gameCardsContainer') {
-    // Wait for GAME_CONFIG to be loaded
-    if (!GAME_CONFIG) {
-        await new Promise(resolve => {
-            const checkConfig = setInterval(() => {
-                if (GAME_CONFIG) {
-                    clearInterval(checkConfig);
-                    resolve();
-                }
-            }, 50);
-        });
-    }
+    // Ensure config is loaded before proceeding
+    await ensureConfigLoaded();
 
     const containerElement = document.getElementById(container);
     if (!containerElement) return;
@@ -346,9 +382,12 @@ async function getViewPreference(state) {
 
 // Update UI function
 const updateUI = async (state) => {
+    // Ensure config is loaded before proceeding
+    await ensureConfigLoaded();
+
     // Update game info row
     if (elements.gameInfoRow && elements.gameInfoIcon && elements.gameInfoName) {
-        if (state.gameType && state.gameType !== 'Unknown') {
+        if (state?.gameType && state.gameType !== 'Unknown') {
             elements.gameInfoRow.style.display = 'flex';
             const gameConfig = GAME_CONFIG[state.gameType.toLowerCase()];
             if (gameConfig) {
@@ -358,17 +397,21 @@ const updateUI = async (state) => {
                     elements.gameAboutSection.textContent = gameConfig.about || '';
                 }
             }
+            // Divider styling
+            elements.headerRow?.classList.add('hasDivider');
         } else {
             elements.gameInfoRow.style.display = 'none';
             if (elements.gameAboutSection) {
                 elements.gameAboutSection.classList.remove('active');
             }
+            // Divider styling
+            elements.headerRow?.classList.remove('hasDivider');
         }
     }
 
     // Update solving status
     if (elements.solvingStatus) {
-        if (state.solvingGameType && state.solvingGameType !== state.gameType) {
+        if (state?.solvingGameType && state.solvingGameType !== state?.gameType) {
             elements.solvingStatus.textContent = `Currently Solving: ${state.solvingGameType}`;
             elements.solvingStatus.style.display = 'block';
         } else {
@@ -413,24 +456,28 @@ const updateUI = async (state) => {
         gameControlsContainer.innerHTML = '';
         singleGameCardContainer.innerHTML = '';
 
-        if (state.gameType && state.gameType !== 'Unknown') {
+        if (state?.gameType && state.gameType !== 'Unknown') {
             const gameConfig = GAME_CONFIG[state.gameType.toLowerCase()];
             if (gameConfig) {
-                if (state.hasCorrectUrl) {
+                if (state?.hasCorrectUrl) {
                     // Show game controls when URL is correct
                     gameControlsContainer.style.display = 'block';
                     singleGameCardContainer.style.display = 'none';
-                    updateGameControls(gameConfig, state);
+                    await updateGameControls(gameConfig, state);
+                    // Set default control description message if no control is selected
+                    if (!selectedControl) {
+                        updateControlDescription(null);
+                    }
                 } else {
                     // Show single game card when URL is incorrect but game is detected
                     gameControlsContainer.style.display = 'none';
                     singleGameCardContainer.style.display = 'block';
 
-                    const card = createGameCard(state.gameType.toLowerCase(), gameConfig, 'grid', true);
+                    const card = createGameCard(state.gameType.toLowerCase(), gameConfig, 'grid', true, false);
                     singleGameCardContainer.appendChild(card);
 
                     // Add full cancel button after game card if solving
-                    if (state.isSolving) {
+                    if (state?.isSolving) {
                         const cancelButton = createCancelButton(state, false);
                         const cancelContainer = document.createElement('div');
                         cancelContainer.style.marginTop = '8px';
@@ -442,24 +489,26 @@ const updateUI = async (state) => {
         }
     }
 
-
-
     // Update API key section
     if (elements.deleteApiKey) {
-        elements.deleteApiKey.disabled = !state.hasApiKey || (state.isSolving && state.solvingWithApiKey);
+        elements.deleteApiKey.disabled = !state?.hasApiKey || (state?.isSolving && state?.solvingWithApiKey);
+    }
+    if (elements.saveApiKey) {
+        elements.saveApiKey.disabled = !state?.hasApiKey || (state?.isSolving && state?.solvingWithApiKey);
     }
     if (elements.apiKeyInput) {
-        if (state.hasApiKey) {
+        if (state?.hasApiKey) {
             const data = await chrome.storage.local.get('openaiApiKey');
             elements.apiKeyInput.value = data.openaiApiKey || '';
         } else {
             elements.apiKeyInput.value = '';
         }
         elements.apiKeyInput.placeholder = 'Enter your OpenAI API key';
+        elements.apiKeyInput.disabled = !state?.hasApiKey || (state?.isSolving && state?.solvingWithApiKey);
     }
 
     // Show status
-    showStatus(state.statusMessage, state.statusType);
+    showStatus(state?.statusMessage || 'Ready', state?.statusType || 'ready');
 
     // Update game cards view if contentManager is initialized
     if (contentManager) {
@@ -533,7 +582,7 @@ class ContentManager {
         }
     }
 
-    showSection(sectionId) {
+    async showSection(sectionId) {
         this.mainContent.classList.remove('active');
         this.contentManager.classList.add('active');
 
@@ -554,10 +603,30 @@ class ContentManager {
         document.getElementById('modalMenu')?.classList.remove('visible');
     }
 
-    hideSection(sectionId) {
+    async hideSection(sectionId) {
+
+        // State needed for home page redirect on close if necessary
+        // Get state first
+        let state;
+        try {
+            const response = await chrome.runtime.sendMessage({ action: 'getState' });
+            state = response?.state;
+        } catch (error) {
+            console.warn('Error getting state:', error);
+            state = {};
+        }
+
+        // Make all UI changes synchronously
         document.getElementById(`${sectionId}Section`)?.classList.remove('active');
         this.contentManager.classList.remove('active');
-        this.mainContent.classList.add('active');
+
+        if (state?.gameType && state.gameType !== 'Unknown') {
+            this.mainContent.classList.add('active');
+        } else {
+            this.showSection('home');
+            this.updateHeaderButtonStates('home');
+        }
+
         this.currentSection = null;
         document.getElementById('modalMenu')?.classList.remove('visible');
     }
@@ -576,11 +645,24 @@ class ContentManager {
 
 document.addEventListener('DOMContentLoaded', async () => {
     const contentManager = new ContentManager();
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    // Initialize both home and links views
+    // Initialize state first
+    let initialState;
+    try {
+        const response = await chrome.runtime.sendMessage({ action: 'getState' });
+        initialState = response?.state || {};
+    } catch (error) {
+        console.warn('Error getting initial state:', error);
+        initialState = {};
+    }
+
+    // Get view preference
+    const viewPreference = await getViewPreference(initialState);
+    initialState.viewPreference = viewPreference;
+
+    // Initialize both home and links views with the initial state
     await Promise.all([
-        updateGameCardsView('list', 'gameCardsContainer'),
+        updateGameCardsView(viewPreference, 'gameCardsContainer'),
         updateGameCardsView('condensed', 'linksGameCardsContainer')
     ]);
 
@@ -631,42 +713,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Listen for state updates
+    // Listen for messages from background script
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.action === 'updateState') {
-            updateUI(request.state);
-            // Update links view when state changes
-            if (contentManager.isSectionActive('links')) {
-                updateGameCardsView('condensed', 'linksGameCardsContainer');
+            updateUI(request.state || {});
+        } else if (request.action === 'solveComplete') {
+            // Only reset selected control if solving was successful
+            if (request.success) {
+                selectedControl = null;
+                updateControlDescription(null);
+                updateStartButton();
             }
+            updateUI(request.state || {});
         }
     });
 
-    // Initialize state
-    try {
-        const response = await chrome.runtime.sendMessage({ action: 'getState' });
-        if (response?.state) {
-            const viewPreference = await getViewPreference(response.state);
-            response.state.viewPreference = viewPreference;
-
-            if (response.state.gameType && response.state.gameType !== 'Unknown') {
-                contentManager.showMainContent();
-            } else {
-                contentManager.showSection('home');
-                contentManager.updateHeaderButtonStates('home');
-                await updateGameCardsView(viewPreference);
-            }
-            await updateUI(response.state);
-        }
-    } catch (error) {
-        console.warn('Error getting initial state:', error);
-        showStatus('Error loading state', 'error');
-        // Default to home view on error
+    // Show appropriate content based on initial state
+    if (initialState?.gameType && initialState.gameType !== 'Unknown') {
+        contentManager.showMainContent();
+    } else {
         contentManager.showSection('home');
         contentManager.updateHeaderButtonStates('home');
-        // Default to list view on error
-        await updateGameCardsView('list');
     }
+
+    // Update UI with initial state
+    await updateUI(initialState);
 
     // Event handlers
     elements.apiKeyHeader?.addEventListener('click', () => {
@@ -680,17 +751,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     elements.saveApiKey?.addEventListener('click', async () => {
         const apiKey = elements.apiKeyInput?.value.trim();
         if (apiKey) {
-            chrome.runtime.sendMessage({ action: 'updateApiKey', apiKey });
+            try {
+                await chrome.runtime.sendMessage({ action: 'updateApiKey', apiKey });
+                showApiKeyStatus('API key saved', 'success');
+            } catch (error) {
+                showApiKeyStatus('Error saving API key', 'error');
+            }
         } else {
-            chrome.runtime.sendMessage({
-                action: 'updateState',
-                state: { statusMessage: 'Please enter a valid API key', statusType: 'error' }
-            });
+            showApiKeyStatus('Enter valid API key', 'error');
         }
     });
 
-    elements.deleteApiKey?.addEventListener('click', () => {
-        chrome.runtime.sendMessage({ action: 'clearApiKey' });
+    elements.deleteApiKey?.addEventListener('click', async () => {
+        try {
+            await chrome.runtime.sendMessage({ action: 'clearApiKey' });
+            showApiKeyStatus('API key deleted', 'success');
+        } catch (error) {
+            showApiKeyStatus('Error deleting API key', 'error');
+        }
     });
 
     // Game info button handlers

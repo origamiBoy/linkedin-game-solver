@@ -7,7 +7,7 @@
 </head>
 <body>
   <div class="header">
-    <div class="header-row">
+    <div class="header-row" id="headerRow">
       <div class="header-left">
         <img src="../../icons/icon48.png" alt="App Icon" class="app-icon">
         <h2>Solver</h2>
@@ -89,11 +89,12 @@
         <div class="api-key-content" id="apiKeyContent">
           <input type="password" id="apiKeyInput" placeholder="Enter OpenAI API Key">
           <div class="api-key-actions">
-            <button class="primary-button" id="saveApiKey">Save Key</button>
-            <button class="primary-button delete-key-btn" id="deleteApiKey">Delete Key</button>
+            <button class="api-key-button save-key-btn" id="saveApiKey">Save Key</button>
+            <button class="api-key-button delete-key-btn" id="deleteApiKey">Delete Key</button>
           </div>
         </div>
       </div>
+      <div id="apiKeyStatus" class="api-key-status"></div>
     </div>
 
     <!-- Other Content Sections -->

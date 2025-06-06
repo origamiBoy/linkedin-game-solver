@@ -168,6 +168,7 @@ class CrossclimbSolver {
             let invalidWordsDisplay = "";
             let validWordsDisplay = "";
             let invalidWordChainDisplay = "";
+            let exampleDisplay = "";
 
             // Convert to display format
             if (invalidWordsCombined.size > 0) {
@@ -192,6 +193,17 @@ class CrossclimbSolver {
                 invalidWordChainDisplay = Array.from(invalidWordChainCombined).map(chain => `"${chain}"`).join(', ');
             }
 
+            switch (WORD_SIZE) {
+                case 4:
+                    exampleDisplay = 'cork hook corn cook torn';
+                    break;
+                case 5:
+                    exampleDisplay = 'click sling cling clink cluck';
+                    break;
+                default:
+                    break;
+            }
+
             const incorrectWordsText = invalidWordsDisplay
                 ? `\nNote: These previous words were incorrect with their respective clue numbers if relevant: ${invalidWordsDisplay}. Please provide different answers.`
                 : '';
@@ -204,9 +216,12 @@ class CrossclimbSolver {
                 ? `\nNote: These previous entire solutions were incorrect and could not be arranged in a valid chain: ${invalidWordChainDisplay}. Please provide different answers.`
                 : '';
 
-            //const prompt = `you are solving the middle clues from the LinkedIn puzzle Crossclimb. There are ${MIDDLE_CLUES_COUNT} clues each with ${WORD_SIZE} letters. The words be able to be arrange in a way such that each word differs by only one letter. Output only the exact word answers in the order of the clue given with one space between them, and nothing else, like the following: 'cork hook corn cook torn'. the clues are ${cluesText}${incorrectWordsText}`;
-            const prompt = `You are solving the middle clues from the LinkedIn puzzle Crossclimb. There are ${MIDDLE_CLUES_COUNT} clues each with ${WORD_SIZE} letters. The words be able to be arrange in a way such that each word differs by only one letter, there are no duplicate words. The output should only consist of the word answers with one space between them, with no other text or numbers. An example output is: 'cork hook corn cook torn'. The clues are ${cluesText}${incorrectWordsText}${correctWordsText}${invalidWordChainText}`;
+            const exampleText = exampleDisplay ? ` An example output is: '${exampleDisplay}'.`
+                : '';
 
+            //const prompt = `you are solving the middle clues from the LinkedIn puzzle Crossclimb. There are ${MIDDLE_CLUES_COUNT} clues each with ${WORD_SIZE} letters. The words be able to be arrange in a way such that each word differs by only one letter. Output only the exact word answers in the order of the clue given with one space between them, and nothing else, like the following: 'cork hook corn cook torn'. the clues are ${cluesText}${incorrectWordsText}`;
+            //const prompt = `You are solving the middle clues from the LinkedIn puzzle Crossclimb. There are ${MIDDLE_CLUES_COUNT} clues each with ${WORD_SIZE} letters. The words be able to be arrange in a way such that each word differs by only one letter, there are no duplicate words. The output should only consist of the word answers with one space between them, with no other text or numbers. An example output is: 'cork hook corn cook torn'. The clues are ${cluesText}${incorrectWordsText}${correctWordsText}${invalidWordChainText}`;
+            const prompt = `You are solving the middle clues from the LinkedIn puzzle Crossclimb. There are ${MIDDLE_CLUES_COUNT} clues whose answers are one word with exactly ${WORD_SIZE} letters. The words be able to be arrange in a way such that each word differs by only one letter, no two words are the same. The output should only consist of the word answers with one space between them, with no other text or numbers indicators.${exampleText} The clues are ${cluesText}${incorrectWordsText}${correctWordsText}${invalidWordChainText}`;
             try {
                 const response = await openai.chat.completions.create({
                     model: "gpt-3.5-turbo",
