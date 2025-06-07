@@ -44,6 +44,21 @@
     {
       "matches": ["https://www.linkedin.com/games/view/crossclimb/desktop/*", "https://www.linkedin.com/games/crossclimb/*"],
       "js": ["browser/js/browser_crossclimb.js"]
+    },
+    {
+      "matches": [
+        "https://www.linkedin.com/games/view/queens/desktop/*",
+        "https://www.linkedin.com/games/queens/*",
+        "https://www.linkedin.com/games/view/zip/desktop/*",
+        "https://www.linkedin.com/games/zip/*",
+        "https://www.linkedin.com/games/view/tango/desktop/*",
+        "https://www.linkedin.com/games/tango/*",
+        "https://www.linkedin.com/games/view/pinpoint/desktop/*",
+        "https://www.linkedin.com/games/pinpoint/*",
+        "https://www.linkedin.com/games/view/crossclimb/desktop/*",
+        "https://www.linkedin.com/games/crossclimb/*"
+      ],
+      "js": ["browser/js/content_script.js"]
     }
   ],
   "icons": {

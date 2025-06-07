@@ -361,7 +361,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-  margin-top: var(--spacing-md);
   padding: var(--spacing-md) 0;
   flex-grow: 1;
   overflow-y: auto;
@@ -473,6 +472,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   background-color: var(--color-background-alt);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -499,15 +499,27 @@ body {
   border-color: var(--color-primary);
 }
 
-.control-card.api-key-required:disabled span:last-child::after {
+.control-card.api-key-required:disabled span:nth-child(2)::after {
   content: " (API Key Required)";
   font-size: var(--font-size-xs);
   font-style: italic;
-  color: var(--color-disabled-text);
 }
 
-.control-card.api-key-required.selected:disabled span:last-child::after {
+.control-card.api-key-required.selected:disabled span:last  -child::after {
   content: " (API Key Required)";
+  font-size: var(--font-size-xs);
+  font-style: italic;
+  color: var(--color-background);
+}
+
+.control-card.stored-required:disabled span:nth-child(2)::after {
+  content: " (Saved Solutions Required)";
+  font-size: var(--font-size-xs);
+  font-style: italic;
+}
+
+.control-card.stored-required.selected:disabled span:nth-child(2)::after {
+  content: " (Saved Solutions Required)";
   font-size: var(--font-size-xs);
   font-style: italic;
   color: var(--color-background);
@@ -546,6 +558,7 @@ body {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   transition: border-color var(--transition-fast);
+  text-align: center;
 }
 
 .control-description.has-selection {
@@ -619,8 +632,37 @@ body {
 }
 
 /* Status Messages */
-.status-message {
+
+#status {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
   margin-top: var(--spacing-md);
+}
+
+.status-login-button {
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+  text-align: center;
+  min-height: calc(30px + 2 * var(--spacing-md));
+  border: none;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.status-login-button:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+}
+
+.status-login-button:disabled {
+  background-color: var(--color-disabled);
+  color: var(--color-disabled-text);
+}
+
+.status-message {
   padding: var(--spacing-md);
   border-radius: var(--radius-sm);
   text-align: center;
@@ -632,7 +674,6 @@ body {
 }
 
 .status-message.ready {
-  min-height: 20px;
   color: var(--color-text-secondary);
 }
 
@@ -760,7 +801,6 @@ body {
   position: relative;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  margin-bottom: var(--spacing-md);
   background-color: var(--color-background-alt);
   opacity: 0;
   transform: translateY(-10px);
@@ -771,6 +811,11 @@ body {
   display: block;
   opacity: 1;
   transform: translateY(0);
+}
+
+.content-header ~ p {
+  margin-top: var(--spacing-md);
+  margin-bottom: 0;
 }
 
 .main-content {
@@ -1027,7 +1072,7 @@ body {
 }
 
 /* Status */
-.status-message, .api-key-status {
+.api-key-status {
   margin-top: var(--spacing-md);
   padding: var(--spacing-md);
   border-radius: var(--radius-sm);
@@ -1040,7 +1085,6 @@ body {
 }
 
 .ready {
-  min-height: 20px;
   color: var(--color-text-secondary);
 }
 
@@ -1108,3 +1152,60 @@ body {
   background-color: var(--color-disabled);
   color: var(--color-disabled-text);
 }
+
+/* Tag Indicators */
+.tag-indicators {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.tag-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--icon-size-sm);
+    height: var(--icon-size-sm);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.tag-indicator .material-icons {
+    font-size: var(--icon-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.tag-indicator.success-tag .material-icons {
+    color: var(--color-text-secondary);
+}
+
+.tag-indicator.failure-tag .material-icons {
+    color: var(--color-danger);
+}
+
+/* Special styles for AI tag */
+.tag-indicator.ai {
+    cursor: pointer;
+}
+
+.tag-indicator.ai:hover .material-icons {
+    transform: scale(1.1);
+    opacity: 0.7;
+}
+
+/* Selected state for tag indicators */
+.control-card.selected .tag-indicator .material-icons {
+    color: var(--color-text-on-primary);
+}
+
+.control-card.selected .tag-indicator.success-tag .material-icons {
+    color: var(--color-text-on-primary);
+}
+
+.control-card.selected .tag-indicator.failure-tag .material-icons {
+    color: var(--color-text-on-primary);
+}
+
+

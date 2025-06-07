@@ -13,7 +13,8 @@ const state = {
     refreshStartTime: null,
     activeButton: null,
     viewPreference: 'list', // 'list' or 'grid'
-    hasCorrectUrl: false // New state to track URL match
+    hasCorrectUrl: false, // New state to track URL match
+    hasResultsUrl: false // New state to track results URL
 };
 
 // Import game config for service worker
@@ -77,6 +78,7 @@ async function updateCurrentTab() {
             state.statusType = 'error';
             state.isReady = false;
             state.hasCorrectUrl = false;
+            state.hasResultsUrl = false;
             await persistState();
             return;
         }
@@ -90,6 +92,7 @@ async function updateCurrentTab() {
         detectGameType(tab.url);
         const expectedUrl = getGameUrl(state.gameType);
         state.hasCorrectUrl = state.gameType !== 'Unknown' && tab.url === expectedUrl;
+        state.hasResultsUrl = tab.url.includes('/results/');
 
         // Update status based on solving state and URL
         if (state.isSolving) {
@@ -100,25 +103,33 @@ async function updateCurrentTab() {
             state.statusType = 'error';
             state.isReady = false;
         } else {
-            if (!state.hasCorrectUrl) {
-                state.statusMessage = 'Not Ready - Incorrect Game URL';
-                state.statusType = 'error';
-                state.isReady = false;
+            // Only update status message if we're not on a results page
+            if (!state.hasResultsUrl) {
+                if (!state.hasCorrectUrl) {
+                    state.statusMessage = 'Not Ready - Incorrect Game URL';
+                    state.statusType = 'error';
+                    state.isReady = false;
+                } else {
+                    state.statusMessage = 'Ready';
+                    state.statusType = 'ready';
+                    state.isReady = true;
+                }
             } else {
-                state.statusMessage = 'Ready';
-                state.statusType = 'ready';
-                state.isReady = true;
+                state.statusMessage = 'Puzzle Solved Successfully';
+                state.statusType = 'success';
+                state.isReady = false;
             }
+
         }
 
         // Persist state after update
         await persistState();
     } catch (error) {
-        console.error('Error in updateCurrentTab:', error);
         state.statusMessage = 'Error updating tab state';
         state.statusType = 'error';
         state.isReady = false;
         state.hasCorrectUrl = false;
+        state.hasResultsUrl = false;
         await persistState();
     }
 }
@@ -162,7 +173,8 @@ async function updatePopupState() {
                 solvingGameType: state.solvingGameType,
                 solvingWithApiKey: state.solvingWithApiKey,
                 viewPreference: state.viewPreference,
-                hasCorrectUrl: state.hasCorrectUrl
+                hasCorrectUrl: state.hasCorrectUrl,
+                hasResultsUrl: state.hasResultsUrl
             }
         }).catch(error => {
             // Ignore connection errors when popup is closed
@@ -182,6 +194,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 // Always update current tab to ensure correct game detection
                 await updateCurrentTab();
                 sendResponse({ state });
+                return;
+            }
+
+            // Handle login button click
+            if (request.action === 'clickLoginButton') {
+                try {
+                    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+                    if (tab) {
+                        chrome.tabs.sendMessage(tab.id, { action: 'clickLoginButton' });
+                    }
+                } catch (error) {
+                }
                 return;
             }
 

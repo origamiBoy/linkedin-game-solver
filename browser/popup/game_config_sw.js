@@ -94,6 +94,7 @@ const GAME_CONFIG = {
             ai: true
         },
         about: "A word search puzzle where you find words in a grid of letters.",
+        storageKey: "pinpointSolution",
         controls: [
             {
                 name: "Solve",
@@ -132,6 +133,7 @@ const GAME_CONFIG = {
             ai: true
         },
         about: "A word chain puzzle where you connect words by changing one letter at a time. The AI solver uses OpenAI to find solutions.",
+        storageKey: "crossclimbSolution",
         controls: [
             {
                 name: "Solve",

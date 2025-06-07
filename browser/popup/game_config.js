@@ -94,6 +94,7 @@ const GAME_CONFIG = {
             ai: true
         },
         about: "Guess the category.",
+        storageKey: "pinpointSolution",
         controls: [
             {
                 name: "Solve",
@@ -132,6 +133,7 @@ const GAME_CONFIG = {
             ai: true
         },
         about: "Unlock a trivia ladder.",
+        storageKey: "crossclimbSolution",
         controls: [
             {
                 name: "Solve",

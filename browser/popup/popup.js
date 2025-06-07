@@ -45,11 +45,44 @@ async function ensureConfigLoaded() {
     return GAME_CONFIG;
 }
 
+// Helper function to get latest state
+async function getLatestState() {
+    try {
+        const response = await chrome.runtime.sendMessage({ action: 'getState' });
+        return response?.state || {};
+    } catch (error) {
+        console.warn('Error getting state:', error);
+        return {};
+    }
+}
+
 // Helper function to show status
-function showStatus(message, type = 'ready') {
+function showStatus(message, type = 'ready', state) {
     if (elements.status) {
-        elements.status.innerHTML = message;
-        elements.status.className = `status-message ${type}`;
+        // Update status message
+        const statusMessage = elements.status.querySelector('.status-message');
+        if (statusMessage) {
+            statusMessage.innerHTML = message;
+            statusMessage.className = `status-message ${type}`;
+        }
+
+        // Handle login button
+        let loginButton = elements.status.querySelector('.status-login-button');
+        if (type === 'success') {
+            if (!loginButton) {
+                loginButton = document.createElement('button');
+                loginButton.className = 'status-login-button';
+                loginButton.textContent = 'Log In';
+                loginButton.addEventListener('click', () => {
+                    chrome.runtime.sendMessage({ action: 'clickLoginButton' });
+                });
+                elements.status.appendChild(loginButton);
+            }
+            // Enable/disable button based on hasResultsUrl
+            loginButton.disabled = !state?.hasResultsUrl;
+        } else if (loginButton) {
+            loginButton.remove();
+        }
     }
 }
 
@@ -63,6 +96,21 @@ function showApiKeyStatus(message, type = 'success') {
     setTimeout(() => {
         apiKeyStatus.textContent = '';
     }, 3000);
+}
+
+// Helper function to check if a game has stored solutions
+async function hasStoredSolutions(gameType) {
+    try {
+        const gameConfig = GAME_CONFIG[gameType.toLowerCase()];
+        if (!gameConfig?.storageKey) return false;
+
+        const data = await chrome.storage.local.get(gameConfig.storageKey);
+
+        return !!data[gameConfig.storageKey];
+    } catch (error) {
+        console.warn('Error checking stored solutions:', error);
+        return false;
+    }
 }
 
 // Function to create game card HTML for grid/list views
@@ -125,7 +173,7 @@ function createGameCard(gameId, gameConfig, viewMode, showAbout = false, newTab 
 }
 
 // Function to create a control card
-function createControlCard(control, gameType, state) {
+async function createControlCard(control, gameType, state) {
     const card = document.createElement('button');
     card.className = 'control-card';
     card.id = control.id;
@@ -137,7 +185,15 @@ function createControlCard(control, gameType, state) {
     // Set button state
     const requiresApiKey = control.requirements?.ai || false;
     const requiresStored = control.requirements?.stored || false;
-    const isReady = state?.isReady && (!requiresApiKey || state?.hasApiKey);
+    let hasStored = false;
+
+    if (requiresStored) {
+        hasStored = await hasStoredSolutions(gameType);
+    }
+
+    const isReady = state?.isReady &&
+        (!requiresApiKey || state?.hasApiKey) &&
+        (!requiresStored || hasStored);
 
     // If button is disabled for non-solving reasons, unselect it
     if (!isReady && !state?.isSolving) {
@@ -150,6 +206,42 @@ function createControlCard(control, gameType, state) {
 
     card.disabled = state?.isSolving || !isReady;
     card.classList.toggle('api-key-required', requiresApiKey && !state?.hasApiKey);
+    card.classList.toggle('stored-required', requiresStored && !hasStored);
+
+    // Add tag indicators if needed
+    if (requiresApiKey || requiresStored) {
+        const tagIndicators = document.createElement('div');
+        tagIndicators.className = 'tag-indicators';
+
+        if (requiresApiKey) {
+            const aiTag = document.createElement('div');
+            aiTag.className = `tag-indicator ai ${state?.hasApiKey ? 'success-tag' : 'failure-tag'}`;
+            aiTag.title = state?.hasApiKey ? 'AI API Key Available' : 'AI API Key Required';
+            aiTag.innerHTML = '<span class="material-icons">smart_toy</span>';
+
+            // Add click handler to navigate to settings
+            aiTag.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent card selection
+                // Find the settings button and click it
+                const settingsButton = document.getElementById('settingsButton');
+                if (settingsButton) {
+                    settingsButton.click();
+                }
+            });
+
+            tagIndicators.appendChild(aiTag);
+        }
+
+        if (requiresStored) {
+            const storageTag = document.createElement('div');
+            storageTag.className = `tag-indicator storage ${hasStored ? 'success-tag' : 'failure-tag'}`;
+            storageTag.title = hasStored ? 'Stored Solutions Available' : 'No Stored Solutions';
+            storageTag.innerHTML = '<span class="material-icons">storage</span>';
+            tagIndicators.appendChild(storageTag);
+        }
+
+        card.appendChild(tagIndicators);
+    }
 
     // Add click handler for radio button behavior
     card.addEventListener('click', () => {
@@ -227,7 +319,7 @@ function createCancelButton(state, isIconOnly = false) {
 }
 
 // Function to create controls container structure
-function createControlsContainer() {
+function createControlsContainer(state) {
     const controlsContainer = document.createElement('div');
     controlsContainer.className = 'controls-container';
 
@@ -259,7 +351,7 @@ function createControlsContainer() {
     `;
 
     // Create icon-only cancel button for controls container
-    const cancelButton = createCancelButton({ isSolving: false }, true);
+    const cancelButton = createCancelButton(state, true);
 
     // Assemble the controls
     controlsActions.appendChild(refreshButton);
@@ -280,25 +372,41 @@ async function updateGameControls(gameConfig, state) {
     const gameControlsContainer = document.getElementById('gameControlsContainer');
     if (!gameControlsContainer) return;
 
-    // Clear existing controls
-    gameControlsContainer.innerHTML = '';
+    // Check for existing controls container and actions
+    let controlsContainer = gameControlsContainer.querySelector('.controls-container');
+    let controlsActions = gameControlsContainer.querySelector('.controls-actions');
 
-    // Create new controls container structure
-    const { controlsContainer, controlsActions } = createControlsContainer();
-    gameControlsContainer.appendChild(controlsContainer);
-    gameControlsContainer.appendChild(controlsActions);
+    // Only create new containers if they don't exist
+    if (!controlsContainer || !controlsActions) {
+        // Clear existing controls
+        gameControlsContainer.innerHTML = '';
 
-    // Get references to the newly created elements
-    const controlsGrid = document.getElementById('controlsGrid');
-    const refreshButton = document.getElementById('refreshButton');
-    const startButton = document.getElementById('startButton');
-    const cancelButton = document.getElementById('cancelButton');
+        // Create new controls container structure
+        const newContainers = createControlsContainer(state);
+        controlsContainer = newContainers.controlsContainer;
+        controlsActions = newContainers.controlsActions;
+        gameControlsContainer.appendChild(controlsContainer);
+        gameControlsContainer.appendChild(controlsActions);
+    }
+
+    // Check for stored solutions
+    const hasStored = await hasStoredSolutions(state?.gameType);
+    state.hasStoredSolutions = hasStored;
+
+    // Get references to the elements
+    const controlsGrid = controlsContainer.querySelector('#controlsGrid');
+    const refreshButton = controlsActions.querySelector('#refreshButton');
+    const startButton = controlsActions.querySelector('#startButton');
+    const cancelButton = controlsActions.querySelector('#cancelButton');
 
     if (!controlsGrid || !refreshButton || !startButton || !cancelButton) return;
 
+    // Clear existing control cards
+    controlsGrid.innerHTML = '';
+
     // Create control cards
-    gameConfig.controls.forEach(control => {
-        const card = createControlCard(control, state?.gameType, state);
+    for (const control of gameConfig.controls) {
+        const card = await createControlCard(control, state?.gameType, state);
         // If this control was previously selected, restore its selected state
         if (selectedControl && selectedControl.id === control.id) {
             card.classList.add('selected');
@@ -306,7 +414,7 @@ async function updateGameControls(gameConfig, state) {
             startButton.disabled = false; // Enable start button if control is selected
         }
         controlsGrid.appendChild(card);
-    });
+    }
 
     // Set up refresh button
     refreshButton.onclick = () => {
@@ -345,8 +453,7 @@ async function updateGameCardsView(viewMode, container = 'gameCardsContainer') {
     containerElement.innerHTML = '';
 
     // Get current state to check if solving
-    const response = await chrome.runtime.sendMessage({ action: 'getState' });
-    const state = response?.state;
+    const state = await getLatestState();
 
     // Add cancel button at the top if solving
     if (state?.isSolving && container === 'gameCardsContainer') {
@@ -384,6 +491,11 @@ async function getViewPreference(state) {
 const updateUI = async (state) => {
     // Ensure config is loaded before proceeding
     await ensureConfigLoaded();
+
+    // Get latest state if none provided
+    if (!state) {
+        state = await getLatestState();
+    }
 
     // Update game info row
     if (elements.gameInfoRow && elements.gameInfoIcon && elements.gameInfoName) {
@@ -459,7 +571,7 @@ const updateUI = async (state) => {
         if (state?.gameType && state.gameType !== 'Unknown') {
             const gameConfig = GAME_CONFIG[state.gameType.toLowerCase()];
             if (gameConfig) {
-                if (state?.hasCorrectUrl) {
+                if (state?.hasCorrectUrl || state?.hasResultsUrl) {
                     // Show game controls when URL is correct
                     gameControlsContainer.style.display = 'block';
                     singleGameCardContainer.style.display = 'none';
@@ -494,7 +606,7 @@ const updateUI = async (state) => {
         elements.deleteApiKey.disabled = !state?.hasApiKey || (state?.isSolving && state?.solvingWithApiKey);
     }
     if (elements.saveApiKey) {
-        elements.saveApiKey.disabled = !state?.hasApiKey || (state?.isSolving && state?.solvingWithApiKey);
+        elements.saveApiKey.disabled = (state?.isSolving && state?.solvingWithApiKey);
     }
     if (elements.apiKeyInput) {
         if (state?.hasApiKey) {
@@ -504,11 +616,11 @@ const updateUI = async (state) => {
             elements.apiKeyInput.value = '';
         }
         elements.apiKeyInput.placeholder = 'Enter your OpenAI API key';
-        elements.apiKeyInput.disabled = !state?.hasApiKey || (state?.isSolving && state?.solvingWithApiKey);
+        elements.apiKeyInput.disabled = (state?.isSolving && state?.solvingWithApiKey);
     }
 
     // Show status
-    showStatus(state?.statusMessage || 'Ready', state?.statusType || 'ready');
+    showStatus(state?.statusMessage || 'Ready', state?.statusType || 'ready', state);
 
     // Update game cards view if contentManager is initialized
     if (contentManager) {
@@ -538,13 +650,11 @@ class ContentManager {
     setupEventListeners() {
         this.headerButtons.home.addEventListener('click', async () => {
             try {
-                const response = await chrome.runtime.sendMessage({ action: 'getState' });
-                if (response?.state) {
-                    const viewPreference = await getViewPreference(response.state);
-                    this.showSection('home');
-                    this.updateHeaderButtonStates('home');
-                    await updateGameCardsView(viewPreference);
-                }
+                const state = await getLatestState();
+                const viewPreference = await getViewPreference(state);
+                this.showSection('home');
+                this.updateHeaderButtonStates('home');
+                await updateGameCardsView(viewPreference);
             } catch (error) {
                 console.warn('Error getting state for home view:', error);
                 this.showSection('home');
@@ -583,6 +693,9 @@ class ContentManager {
     }
 
     async showSection(sectionId) {
+        // Get latest state before showing section
+        const state = await getLatestState();
+
         this.mainContent.classList.remove('active');
         this.contentManager.classList.add('active');
 
@@ -601,6 +714,9 @@ class ContentManager {
         }
 
         document.getElementById('modalMenu')?.classList.remove('visible');
+
+        // Update UI with latest state
+        await updateUI(state);
     }
 
     async hideSection(sectionId) {
@@ -647,14 +763,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const contentManager = new ContentManager();
 
     // Initialize state first
-    let initialState;
-    try {
-        const response = await chrome.runtime.sendMessage({ action: 'getState' });
-        initialState = response?.state || {};
-    } catch (error) {
-        console.warn('Error getting initial state:', error);
-        initialState = {};
-    }
+    const initialState = await getLatestState();
 
     // Get view preference
     const viewPreference = await getViewPreference(initialState);
