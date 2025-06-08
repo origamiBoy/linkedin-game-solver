@@ -924,12 +924,23 @@ class CrossclimbSolver {
         }
 
         const finalSolutions = await this.solveFinalClues(middleSolutions);
+        if (finalSolutions.error) {
+            return {
+                success: false,
+                rearrangedChain: [],
+                error: finalSolutions.error
+            };
+        }
         if (!finalSolutions) {
             return {
                 success: false,
                 rearrangedChain: [],
                 error: 'Failed to find valid final solutions after all attempts'
             };
+        }
+
+        if (this.shouldStop) {
+            return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
         }
 
         return {
@@ -1055,6 +1066,288 @@ class CrossclimbSolver {
         };
     }
 
+    async cheatMiddleCluesCount() {
+        if (this.shouldStop) {
+            return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+        }
+        let count = 0;
+
+        // Click the middle guess container first
+        const container = document.querySelector('.crossclimb__guess__container .crossclimb__guess--middle');
+        if (container) {
+            container.click();
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        // Click the crab button until it's disabled
+        while (true) {
+            if (this.shouldStop) {
+                return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+            }
+            count++;
+            const clue = document.querySelector('.crossclimb__clue');
+            if (!clue) break;
+
+            const nextButton = document.querySelector('.crossclimb__crab-btn[aria-label="Go to next row"]');
+            if (!nextButton || nextButton.hasAttribute('disabled')) break;
+
+            nextButton.click();
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+        return count;
+    }
+
+    async cheatMiddleCluesInput() {
+        if (this.shouldStop) {
+            return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+        }
+        // Click the first middle guess block
+        const firstBlock = document.querySelector('.crossclimb__guess__container .crossclimb__guess--middle:nth-child(2)');
+        if (firstBlock) {
+            firstBlock.click();
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+
+        for (let i = 0; i < this.MIDDLE_CLUES_COUNT; i++) {
+            if (this.shouldStop) {
+                return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+            }
+            const revealButton = document.querySelector('button[data-control-btn="reveal"]');
+            if (!revealButton) break;
+
+            revealButton.click();
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            // Wait for current word's inputs to have values
+            const container = document.querySelector(`.crossclimb__guess__container .crossclimb__guess--middle:nth-child(${i + 2})`);
+            if (!container) break;
+
+            const startTime = Date.now();
+            while (Date.now() - startTime < 1000) {
+                const inputs = container.querySelectorAll('.crossclimb__guess_box input');
+                if (Array.from(inputs).every(input => input.value)) {
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+        }
+    }
+
+    async cheatMiddleCluesParse() {
+        if (this.shouldStop) {
+            return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+        }
+        const words = [];
+        const containers = document.querySelectorAll('.crossclimb__guess__container .crossclimb__guess--middle');
+
+        for (const container of containers) {
+            if (this.shouldStop) {
+                return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+            }
+            const letterBoxes = container.querySelectorAll('.crossclimb__guess_box input');
+            let word = '';
+            for (const box of letterBoxes) {
+                const value = box.value;
+                word += value;
+            }
+            words.push(word);
+        }
+
+        const arrangedSolution = this.arrangeWordChain(words);
+        if (!arrangedSolution) {
+            return { success: false, rearrangedChain: [], error: "Could not arrange middle clues into valid chain" };
+        }
+
+        const solutions = this.findRearrangedValues(words, arrangedSolution);
+        return solutions;
+    }
+
+    async cheatFinalCluesInput() {
+        if (this.shouldStop) {
+            return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+        }
+        // Click the first word block
+        const firstBlock = document.querySelector('.crossclimb__guess:nth-child(1)');
+        if (firstBlock) {
+            firstBlock.click();
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+
+        // First reveal
+        const revealButton = document.querySelector('button[data-control-btn="reveal"]');
+        if (revealButton) {
+            revealButton.click();
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+
+        // Wait for first word's inputs to have values
+        const firstWordElement = document.querySelector('.crossclimb__guess:nth-child(1)');
+        if (firstWordElement) {
+            const startTime = Date.now();
+            while (Date.now() - startTime < 1000) {
+                const inputs = firstWordElement.querySelectorAll('.crossclimb__guess_box input');
+                if (Array.from(inputs).every(input => input.value)) {
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+        }
+
+        if (this.shouldStop) {
+            return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+        }
+        // Click the last word block
+        const lastBlock = document.querySelector('div.crossclimb__guess--last');
+        if (lastBlock) {
+            lastBlock.click();
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+
+        // Second reveal
+        if (revealButton) {
+            revealButton.click();
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+
+        // Wait for last word's inputs to have values
+        const lastWordElement = document.querySelector('div.crossclimb__guess--last');
+        if (lastWordElement) {
+            const startTime = Date.now();
+            while (Date.now() - startTime < 1000) {
+                const inputs = lastWordElement.querySelectorAll('.crossclimb__guess_box input');
+                if (Array.from(inputs).every(input => input.value)) {
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+        }
+    }
+
+    async cheatFinalCluesParse() {
+        if (this.shouldStop) {
+            return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+        }
+        const words = [];
+
+        // Get first word
+        const firstWordElement = document.querySelector('.crossclimb__guess:nth-child(1)');
+        if (firstWordElement) {
+            // Wait for first word's inputs to have values
+            const startTime = Date.now();
+            while (Date.now() - startTime < 1000) {
+                const inputs = firstWordElement.querySelectorAll('.crossclimb__guess_box input');
+                if (Array.from(inputs).every(input => input.value)) {
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
+            const letterBoxes = firstWordElement.querySelectorAll('.crossclimb__guess_box input');
+            let word = '';
+            for (const box of letterBoxes) {
+                const value = box.value;
+                word += value;
+            }
+            words.push(word);
+        }
+
+        if (this.shouldStop) {
+            return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+        }
+
+        // Get last word
+        const lastWordElement = document.querySelector('div.crossclimb__guess--last');
+        if (lastWordElement) {
+            // Wait for last word's inputs to have values
+            const startTime = Date.now();
+            while (Date.now() - startTime < 1000) {
+                const inputs = lastWordElement.querySelectorAll('.crossclimb__guess_box input');
+                if (Array.from(inputs).every(input => input.value)) {
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
+            const letterBoxes = lastWordElement.querySelectorAll('.crossclimb__guess_box input');
+            let word = '';
+            for (const box of letterBoxes) {
+                const value = box.value;
+                word += value;
+            }
+            words.push(word);
+        }
+
+        return words;
+    }
+
+    async cheatSolution() {
+        if (this.shouldStop) {
+            return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+        }
+
+        try {
+            // Step 1: Count middle clues
+            this.MIDDLE_CLUES_COUNT = await this.cheatMiddleCluesCount();
+            if (this.shouldStop) {
+                return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+            }
+
+            // Step 2: Input middle clues
+            await this.cheatMiddleCluesInput();
+            if (this.shouldStop) {
+                return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+            }
+
+            // Step 3: Parse middle clues
+            const middleSolutions = await this.cheatMiddleCluesParse();
+            if (this.shouldStop) {
+                return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+            }
+
+            // Step 4: Rearrange middle clues
+            await this.middleCluesRearrange(middleSolutions);
+            if (this.shouldStop) {
+                return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+            }
+            if (!await this.middleClueCheckSolution()) {
+                return { success: false, rearrangedChain: [], error: "Middle clues rearrangement failed" };
+            }
+            if (this.shouldStop) {
+                return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+            }
+
+            // Step 5: Input final clues
+            await this.cheatFinalCluesInput();
+            if (this.shouldStop) {
+                return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+            }
+
+            // Step 6: Parse final clues
+            const finalSolutions = await this.cheatFinalCluesParse();
+            if (this.shouldStop) {
+                return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
+            }
+
+            // Step 7: Save final chain
+            const sortedMiddleSolutions = [...middleSolutions].sort((a, b) => a.final_order - b.final_order);
+            const orderedMiddleWords = sortedMiddleSolutions.map(s => s.word);
+            const rearrangedChain = [finalSolutions[0], ...orderedMiddleWords, finalSolutions[1]];
+
+            await chrome.storage.local.set({
+                'crossclimbSolution': {
+                    middleSolutions: middleSolutions,
+                    finalSolutions: finalSolutions,
+                    rearrangedChain: rearrangedChain,
+                    timestamp: new Date().toISOString()
+                }
+            });
+
+            return { success: true, rearrangedChain: rearrangedChain };
+        } catch (error) {
+            return { success: false, rearrangedChain: [], error: error.message };
+        }
+    }
+
     stopSolving() {
         this.shouldStop = true;
     }
@@ -1065,7 +1358,7 @@ let activeSolver = null;
 
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === 'solve' || request.action === 'inputStoredSolution' || request.action === 'close') {
+    if (request.action === 'solve' || request.action === 'inputStoredSolution' || request.action === 'close' || request.action === 'cheat') {
         (async () => {
             try {
                 // If close action, stop any active solver
@@ -1081,7 +1374,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     return;
                 }
 
-                // Create new solver for solve/input actions
+                // Create new solver for solve/input/cheat actions
                 activeSolver = new CrossclimbSolver();
                 await activeSolver.initialize();
 
@@ -1090,6 +1383,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     result = await activeSolver.getCorrectSolution();
                 } else if (request.action === 'inputStoredSolution') {
                     result = await activeSolver.inputCorrectSolution();
+                } else if (request.action === 'cheat') {
+                    result = await activeSolver.cheatSolution();
                 }
 
                 // Clear active solver reference after completion

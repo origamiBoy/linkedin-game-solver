@@ -1,33 +1,33 @@
 {
   "middleSolutions": [
     {
-      "final_order": 0,
-      "word": "jail"
-    },
-    {
-      "final_order": 2,
-      "word": "fall"
-    },
-    {
       "final_order": 1,
-      "word": "fail"
-    },
-    {
-      "final_order": 4,
-      "word": "film"
+      "word": "brave"
     },
     {
       "final_order": 3,
-      "word": "fill"
+      "word": "grove"
+    },
+    {
+      "final_order": 0,
+      "word": "brace"
+    },
+    {
+      "final_order": 2,
+      "word": "grave"
+    },
+    {
+      "final_order": 4,
+      "word": "drove"
     }
   ],
   "rearrangedChain": [
-    "nail",
-    "jail",
-    "fail",
-    "fall",
-    "fill",
-    "film",
-    "file"
+    "brake",
+    "brace",
+    "brave",
+    "grave",
+    "grove",
+    "drove",
+    "drive"
   ]
 }

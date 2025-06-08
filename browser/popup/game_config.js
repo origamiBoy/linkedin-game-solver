@@ -156,6 +156,17 @@ const GAME_CONFIG = {
                     ai: false,
                     stored: true
                 }
+            },
+            {
+                name: "Cheat",
+                id: "cheat-button",
+                icon: "psychology",
+                description: "Cheats and stores solutions",
+                solveAction: "cheat",
+                requirements: {
+                    ai: false,
+                    stored: false
+                }
             }
         ]
     }
