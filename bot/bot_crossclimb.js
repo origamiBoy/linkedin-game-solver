@@ -985,7 +985,7 @@ class CrossclimbSolver {
         return { success: isComplete, rearrangedChain: wordChain.rearrangedChain };
     }
 
-    async cheatMiddleCluesCount() {
+    async directMiddleCluesCount() {
 
         let count = 0
         // Click the crab button until it's disabled
@@ -1011,8 +1011,8 @@ class CrossclimbSolver {
         MIDDLE_CLUES_COUNT = count;
     }
 
-    async cheatMiddleCluesInput() {
-        console.log('Cheating middle clues...');
+    async directMiddleCluesInput() {
+        console.log('Inputting middle clues...');
 
         // Click the first middle guess block
         await this.page.waitForSelector('.crossclimb__guess__container .crossclimb__guess--middle:nth-child(2)');
@@ -1036,8 +1036,8 @@ class CrossclimbSolver {
         console.log('Step 2 complete: Middle clues inputted.');
     }
 
-    async cheatMiddleCluesParse() {
-        console.log('Cheating middle clues parse...');
+    async directMiddleCluesParse() {
+        console.log('Parsing middle clues...');
         const words = [];
         const containers = await this.page.$$('.crossclimb__guess__container .crossclimb__guess--middle');
 
@@ -1059,8 +1059,8 @@ class CrossclimbSolver {
         return this.findRearrangedValues(words, arrangedSolution);
     }
 
-    async cheatFinalCluesInput() {
-        console.log('Cheating final clues input...');
+    async directFinalCluesInput() {
+        console.log('Inputting final clues...');
 
         // Click the first word block
         await this.page.waitForSelector('.crossclimb__guess:nth-child(1)');
@@ -1095,8 +1095,8 @@ class CrossclimbSolver {
         console.log('Step 6 complete: Final clues inputted.');
     }
 
-    async cheatFinalCluesParse() {
-        console.log('Cheating final clues parse...');
+    async directFinalCluesParse() {
+        console.log('Parsing final clues...');
         const words = [];
 
         // Wait for both words to have non-null input values
@@ -1139,12 +1139,12 @@ class CrossclimbSolver {
         return words;
     }
 
-    async cheatSolution() {
+    async directSolution() {
 
         // Get middle clues solution
-        await this.cheatMiddleCluesCount();
-        await this.cheatMiddleCluesInput();
-        const middleSolutions = await this.cheatMiddleCluesParse();
+        await this.directMiddleCluesCount();
+        await this.directMiddleCluesInput();
+        const middleSolutions = await this.directMiddleCluesParse();
         if (!middleSolutions) {
             console.log('Failed to parse middle clues');
             return { success: false, rearrangedChain: [], error: 'Failed to parse middle clues' };
@@ -1160,8 +1160,8 @@ class CrossclimbSolver {
 
         console.log('Step 5 skipped: Final solutions found, not needed');
         // Get final clues solution
-        await this.cheatFinalCluesInput();
-        const finalSolutions = await this.cheatFinalCluesParse();
+        await this.directFinalCluesInput();
+        const finalSolutions = await this.directFinalCluesParse();
         if (!finalSolutions || finalSolutions.length !== 2) {
             console.log('Failed to parse final clues');
             return { success: false, rearrangedChain: [], error: 'Failed to parse final clues' };
@@ -1174,7 +1174,7 @@ class CrossclimbSolver {
 
         this.saveWordChain(middleSolutions, finalSolutions);
 
-        console.log('Cheat solution complete');
+        console.log('Direct solution complete');
         return { success: true, rearrangedChain };
     }
 
@@ -1196,7 +1196,7 @@ async function main() {
         const args = process.argv.slice(2);
         const useStoredSolution = args.includes('--stored-solution') || args.includes('-s');
         const useGetSolution = args.includes('--get-solution') || args.includes('-g');
-        const useCheatSolution = args.includes('--cheat-solution') || args.includes('-c');
+        const useDirectSolution = args.includes('--direct-solution') || args.includes('-d');
 
         let result;
         if (useStoredSolution) {
@@ -1205,9 +1205,9 @@ async function main() {
         } else if (useGetSolution) {
             console.log('Getting new solution...');
             result = await solver.getCorrectSolution();
-        } else if (useCheatSolution) {
-            console.log('Using cheat solution...');
-            result = await solver.cheatSolution();
+        } else if (useDirectSolution) {
+            console.log('Using direct solution...');
+            result = await solver.directSolution();
         } else {
             console.log('Using default solver...');
             result = await solver.getCorrectSolution();

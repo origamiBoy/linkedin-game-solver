@@ -1066,7 +1066,7 @@ class CrossclimbSolver {
         };
     }
 
-    async cheatMiddleCluesCount() {
+    async directMiddleCluesCount() {
         if (this.shouldStop) {
             return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
         }
@@ -1097,7 +1097,7 @@ class CrossclimbSolver {
         return count;
     }
 
-    async cheatMiddleCluesInput() {
+    async directMiddleCluesInput() {
         if (this.shouldStop) {
             return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
         }
@@ -1133,7 +1133,7 @@ class CrossclimbSolver {
         }
     }
 
-    async cheatMiddleCluesParse() {
+    async directMiddleCluesParse() {
         if (this.shouldStop) {
             return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
         }
@@ -1162,7 +1162,7 @@ class CrossclimbSolver {
         return solutions;
     }
 
-    async cheatFinalCluesInput() {
+    async directFinalCluesInput() {
         if (this.shouldStop) {
             return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
         }
@@ -1223,7 +1223,7 @@ class CrossclimbSolver {
         }
     }
 
-    async cheatFinalCluesParse() {
+    async directFinalCluesParse() {
         if (this.shouldStop) {
             return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
         }
@@ -1280,26 +1280,26 @@ class CrossclimbSolver {
         return words;
     }
 
-    async cheatSolution() {
+    async directSolution() {
         if (this.shouldStop) {
             return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
         }
 
         try {
             // Step 1: Count middle clues
-            this.MIDDLE_CLUES_COUNT = await this.cheatMiddleCluesCount();
+            this.MIDDLE_CLUES_COUNT = await this.directMiddleCluesCount();
             if (this.shouldStop) {
                 return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
             }
 
             // Step 2: Input middle clues
-            await this.cheatMiddleCluesInput();
+            await this.directMiddleCluesInput();
             if (this.shouldStop) {
                 return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
             }
 
             // Step 3: Parse middle clues
-            const middleSolutions = await this.cheatMiddleCluesParse();
+            const middleSolutions = await this.directMiddleCluesParse();
             if (this.shouldStop) {
                 return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
             }
@@ -1317,13 +1317,13 @@ class CrossclimbSolver {
             }
 
             // Step 5: Input final clues
-            await this.cheatFinalCluesInput();
+            await this.directFinalCluesInput();
             if (this.shouldStop) {
                 return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
             }
 
             // Step 6: Parse final clues
-            const finalSolutions = await this.cheatFinalCluesParse();
+            const finalSolutions = await this.directFinalCluesParse();
             if (this.shouldStop) {
                 return { success: false, rearrangedChain: [], error: "Solving stopped by user" };
             }
@@ -1358,7 +1358,7 @@ let activeSolver = null;
 
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === 'solve' || request.action === 'inputStoredSolution' || request.action === 'close' || request.action === 'cheat') {
+    if (request.action === 'solve' || request.action === 'inputStoredSolution' || request.action === 'close' || request.action === 'direct') {
         (async () => {
             try {
                 // If close action, stop any active solver
@@ -1374,7 +1374,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     return;
                 }
 
-                // Create new solver for solve/input/cheat actions
+                // Create new solver for solve/input/direct actions
                 activeSolver = new CrossclimbSolver();
                 await activeSolver.initialize();
 
@@ -1383,8 +1383,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     result = await activeSolver.getCorrectSolution();
                 } else if (request.action === 'inputStoredSolution') {
                     result = await activeSolver.inputCorrectSolution();
-                } else if (request.action === 'cheat') {
-                    result = await activeSolver.cheatSolution();
+                } else if (request.action === 'direct') {
+                    result = await activeSolver.directSolution();
                 }
 
                 // Clear active solver reference after completion

@@ -1,33 +1,33 @@
 {
   "middleSolutions": [
     {
+      "final_order": 2,
+      "word": "rock"
+    },
+    {
       "final_order": 1,
-      "word": "brave"
+      "word": "rook"
     },
     {
       "final_order": 3,
-      "word": "grove"
+      "word": "mock"
     },
     {
       "final_order": 0,
-      "word": "brace"
-    },
-    {
-      "final_order": 2,
-      "word": "grave"
+      "word": "root"
     },
     {
       "final_order": 4,
-      "word": "drove"
+      "word": "monk"
     }
   ],
   "rearrangedChain": [
-    "brake",
-    "brace",
-    "brave",
-    "grave",
-    "grove",
-    "drove",
-    "drive"
+    "hoot",
+    "root",
+    "rook",
+    "rock",
+    "mock",
+    "monk",
+    "honk"
   ]
 }

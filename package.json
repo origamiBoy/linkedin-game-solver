@@ -10,10 +10,11 @@
     "start:pinpoint": "node bot/bot_pinpoint.js",
     "start:pinpoint:stored": "node bot/bot_pinpoint.js --stored-solution",
     "start:pinpoint:get": "node bot/bot_pinpoint.js --get-solution",
+    "start:pinpoint:direct": "node bot/bot_pinpoint.js --direct-solution",
     "start:crossclimb": "node bot/bot_crossclimb.js",
     "start:crossclimb:stored": "node bot/bot_crossclimb.js --stored-solution",
     "start:crossclimb:get": "node bot/bot_crossclimb.js --get-solution",
-    "start:crossclimb:cheat": "node bot/bot_crossclimb.js --cheat-solution"
+    "start:crossclimb:direct": "node bot/bot_crossclimb.js --direct-solution"
   },
   "dependencies": {
     "chalk": "^4.1.2",

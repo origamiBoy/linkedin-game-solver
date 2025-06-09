@@ -1,5 +1,3 @@
-
-
 // Main solver class
 class PinpointSolver {
     constructor() {
@@ -9,7 +7,7 @@ class PinpointSolver {
         this.maxAttempts = 3;
         this.openaiAttempts = 3;
         this.shouldStop = false;
-        this.getDirectSolution = false;
+        this.useDirectSolutionMode = false;
         this.templateSolution = "placeholder";
         this.currentAttempt = 0;
     }
@@ -37,7 +35,7 @@ class PinpointSolver {
     }
 
     async findSolution(phrases, previousSolutions = []) {
-        if (this.getDirectSolution) {
+        if (this.useDirectSolutionMode) {
             return this.templateSolution;
         }
         for (let attempt = 0; attempt < this.openaiAttempts; attempt++) {
@@ -83,7 +81,7 @@ class PinpointSolver {
             }
         }
         // maximum openai attempts reached, continue current attempt until end of clues and forcefully parse the solution
-        this.getDirectSolution = true;
+        this.useDirectSolutionMode = true;
         return this.templateSolution;
     }
 
@@ -235,7 +233,7 @@ class PinpointSolver {
             let isCorrect = await this.checkSolution();
 
             // if forced solution is needed
-            const isForcedSolution = this.getDirectSolution && clueIndex === clues - 1;
+            const isForcedSolution = this.useDirectSolutionMode && clueIndex === clues - 1;
             const isAfterLastAttempt = currentAttempt === this.maxAttempts - 1 && clueIndex === clues - 1;
 
             if (isForcedSolution || isAfterLastAttempt) {
@@ -380,6 +378,79 @@ class PinpointSolver {
             };
         }
     }
+
+    async getDirectSolution() {
+        this.shouldStop = false; // Reset stop flag at start
+
+        // Get number of clues dynamically
+        const clues = document.querySelectorAll('.pinpoint__card__container').length;
+
+        // Loop through each clue
+        for (let clueIndex = 0; clueIndex < clues && !this.shouldStop; clueIndex++) {
+            if (this.shouldStop) {
+                await chrome.storage.local.remove('pinpointSolveState');
+                break;
+            }
+
+            // Input template solution
+            const inputSuccess = await this.inputSolution(this.templateSolution);
+            if (this.shouldStop) {
+                await chrome.storage.local.remove('pinpointSolveState');
+                break;
+            }
+            if (!inputSuccess) {
+                await chrome.storage.local.remove('pinpointSolveState');
+                return {
+                    success: false,
+                    error: 'Failed to input template solution'
+                };
+            }
+
+            // If this is the last clue, parse and save the actual solution
+            if (clueIndex === clues - 1) {
+                const actualSolution = await this.parseSolution();
+                if (this.shouldStop) {
+                    await chrome.storage.local.remove('pinpointSolveState');
+                    break;
+                }
+                if (actualSolution) {
+                    // Save the solution to storage
+                    await chrome.storage.local.set({
+                        'pinpointSolution': {
+                            solution: actualSolution,
+                            timestamp: new Date().toISOString()
+                        }
+                    });
+
+                    return {
+                        success: true,
+                        solution: actualSolution
+                    };
+                } else {
+                    await chrome.storage.local.remove('pinpointSolveState');
+                    return {
+                        success: false,
+                        error: 'Failed to parse actual solution'
+                    };
+                }
+            }
+        }
+
+        if (this.shouldStop) {
+            await chrome.storage.local.remove('pinpointSolveState');
+            return {
+                success: false,
+                error: 'Solving stopped by user'
+            };
+        }
+
+        // If we get here, something went wrong
+        await chrome.storage.local.remove('pinpointSolveState');
+        return {
+            success: false,
+            error: 'Unexpected end of direct solution process'
+        };
+    }
 }
 
 // Global reference to active solver
@@ -387,7 +458,7 @@ let activeSolver = null;
 
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === 'solve' || request.action === 'inputStoredSolution' || request.action === 'close') {
+    if (request.action === 'solve' || request.action === 'inputStoredSolution' || request.action === 'close' || request.action === 'direct') {
         (async () => {
             try {
                 // If close action, stop any active solver
@@ -418,7 +489,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     return;
                 }
 
-                // Create new solver for solve/input actions
+                // Create new solver for solve/input/direct actions
                 activeSolver = new PinpointSolver();
                 await activeSolver.initialize();
 
@@ -438,6 +509,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     result = await activeSolver.getCorrectSolution();
                 } else if (request.action === 'inputStoredSolution') {
                     result = await activeSolver.inputCorrectSolution();
+                } else if (request.action === 'direct') {
+                    result = await activeSolver.getDirectSolution();
                 }
 
                 // Clear active solver reference after completion

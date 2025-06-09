@@ -104,7 +104,7 @@ const GAME_CONFIG = {
                 name: "Solve",
                 id: "solve-button",
                 icon: "play_arrow",
-                description: "Gets, solves, and saves the solution",
+                description: "Gets, solves, and saves solution",
                 solveAction: "solve",
                 requirements: {
                     ai: true,
@@ -120,6 +120,17 @@ const GAME_CONFIG = {
                 requirements: {
                     ai: false,
                     stored: true
+                }
+            },
+            {
+                name: "Direct Save",
+                id: "direct-solve-button",
+                icon: "bolt",
+                description: "Programatically gets and saves solution",
+                solveAction: "direct",
+                requirements: {
+                    ai: false,
+                    stored: false
                 }
             }
         ]
@@ -144,7 +155,7 @@ const GAME_CONFIG = {
                 name: "Solve",
                 id: "solve-button",
                 icon: "play_arrow",
-                description: "Attempts to get, solve, and save the solution",
+                description: "Attempts to get, solve, and save solution",
                 solveAction: "solve",
                 requirements: {
                     ai: true,
@@ -163,11 +174,11 @@ const GAME_CONFIG = {
                 }
             },
             {
-                name: "Cheat",
-                id: "cheat-button",
-                icon: "psychology",
-                description: "Programatically solves and stores solution",
-                solveAction: "cheat",
+                name: "Direct Solve",
+                id: "direct-solve-button",
+                icon: "bolt",
+                description: "Programatically solves and saves solution",
+                solveAction: "direct",
                 requirements: {
                     ai: false,
                     stored: false

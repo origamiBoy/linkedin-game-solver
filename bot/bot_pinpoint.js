@@ -22,7 +22,7 @@ class PinpointSolver {
         // the maximum number of attempts to solve the puzzle, as ai solutions are not deterministic
         this.maxAttempts = 3;
         this.openaiAttempts = 3;
-        this.getDirectSolution = false;
+        this.useDirectSolutionMode = false;
         this.templateSolution = "placeholder";
         this.currentAttempt = 0;
         this.solutionsFile = path.join(__dirname, 'solutions', 'pinpoint_solutions.json');
@@ -60,7 +60,7 @@ class PinpointSolver {
     }
 
     async findSolution(phrases, previousSolutions = []) {
-        if (this.getDirectSolution) {
+        if (this.useDirectSolutionMode) {
             return this.templateSolution;
         }
         for (let attempt = 0; attempt < this.openaiAttempts; attempt++) {
@@ -101,7 +101,7 @@ class PinpointSolver {
         }
         // maximum openai attempts reached, continue current attempt until end of clues and forcefully parse the solution
         console.log(`Maximum openai attempts reached, continuing with direct solution`);
-        this.getDirectSolution = true;
+        this.useDirectSolutionMode = true;
         return this.templateSolution;
     }
 
@@ -141,7 +141,6 @@ class PinpointSolver {
     }
 
     async getCorrectSolution() {
-
         // Get number of clues dynamically
         const clues = await this.page.evaluate(() => {
             return document.querySelectorAll('.pinpoint__card__container').length;
@@ -207,7 +206,7 @@ class PinpointSolver {
                 let isCorrect = await this.checkSolution();
 
                 // if forced solution is needed
-                const isForcedSolution = this.getDirectSolution && clueIndex === clues - 1;
+                const isForcedSolution = this.useDirectSolutionMode && clueIndex === clues - 1;
                 const isAfterLastAttempt = attempt === this.maxAttempts - 1 && clueIndex === clues - 1;
 
                 if (isForcedSolution || isAfterLastAttempt) {
@@ -239,7 +238,6 @@ class PinpointSolver {
             }
         }
 
-
         // If we get here, all attempts failed
         console.log('All attempts failed. Attempted solutions:', this.solutions);
         return {
@@ -248,9 +246,7 @@ class PinpointSolver {
             attemptsMade: attemptsMade
         };
     }
-
     async inputCorrectSolution() {
-
         // Get the most recent solution
         const storedSolution = this.getMostRecentSolution();
         if (!storedSolution) {
@@ -288,8 +284,54 @@ class PinpointSolver {
         }
     }
 
+    async getDirectSolution() {
+        // Get number of clues dynamically
+        const clues = await this.page.evaluate(() => {
+            return document.querySelectorAll('.pinpoint__card__container').length;
+        });
+
+        // Loop through each clue
+        for (let clueIndex = 0; clueIndex < clues; clueIndex++) {
+            // Input template solution
+            const inputSuccess = await this.inputSolution(this.templateSolution);
+            if (!inputSuccess) {
+                console.log('Failed to input template solution');
+                return {
+                    success: false,
+                    error: 'Failed to input template solution'
+                };
+            }
+
+            // If this is the last clue, parse and save the actual solution
+            if (clueIndex === clues - 1) {
+                const actualSolution = await this.parseSolution();
+                if (actualSolution) {
+                    console.log('Parsed actual solution:', actualSolution);
+                    this.saveSolution(actualSolution);
+                    return {
+                        success: true,
+                        solution: actualSolution
+                    };
+                } else {
+                    console.log('Failed to parse actual solution');
+                    return {
+                        success: false,
+                        error: 'Failed to parse actual solution'
+                    };
+                }
+            }
+        }
+
+        // If we get here, something went wrong
+        return {
+            success: false,
+            error: 'Unexpected end of direct solution process'
+        };
+    }
+
     saveSolution(solution) {
         try {
+            console.log(`Saving solution: ${solution}`);
             const solutionData = {
                 solution: solution
             };
@@ -338,6 +380,7 @@ async function main() {
         const args = process.argv.slice(2);
         const useStoredSolution = args.includes('--stored-solution') || args.includes('-s');
         const useGetSolution = args.includes('--get-solution') || args.includes('-g');
+        const useDirectSolution = args.includes('--direct-solution') || args.includes('-d');
 
         if (useStoredSolution) {
             console.log('Using stored solution...');
@@ -345,6 +388,9 @@ async function main() {
         } else if (useGetSolution) {
             console.log('Getting new solution...');
             await solver.getCorrectSolution();
+        } else if (useDirectSolution) {
+            console.log('Using direct solution method...');
+            await solver.getDirectSolution();
         } else {
             console.log('Using default solver...');
             await solver.getCorrectSolution();
