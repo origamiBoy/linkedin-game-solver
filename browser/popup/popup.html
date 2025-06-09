@@ -44,7 +44,7 @@
   <!-- Modal Menu -->
   <div class="modal-menu" id="modalMenu">
     <div class="menu-item" data-section="about">
-      <p class="material-icons">info</p>
+      <p class="material-icons">info_outline</p>
       <span>About</span>
     </div>
     <div class="menu-item" data-section="steps">
@@ -105,25 +105,31 @@
           <p class="material-icons">close</p>
         </button>
       </div>
-      <p>Can solve any LinkedIn puzzle game using solver algorithms or AI. Can save scores to LinkedIn account</p>
+      <p>Contains solvers for each LinkedIn puzzle game. Solutions are found:
+        <ul>
+          <li>Algrithimcally (using logic and code)</li>
+          <li>Programatically (taking answers directly from the webpage)</li>
+          <li>AI (for the words problems)</li>
+        </ul>
+        Some puzzles also allow solutions to be stored, and then later inputted without the delay required in solving them. It is designed to allow users to save scores to LinkedIn.</p>
     </div>
 
     <div class="content-section" id="stepsSection">
       <div class="content-header">
-        <h3>Use on LinkedIn</h3>
+        <h3>Save scores to LinkedIn</h3>
         <button class="close-button" data-section="steps">
           <p class="material-icons">close</p>
         </button>
       </div>
-      <p>Multiple steps are needed to have scores officially saved on your LinkedIn profile.</p>
       <ol>
-        <li>Logged out of LinkedIn</li>
-        <li>Navigate to a valid puzzle link</li>
-        <li>Solve puzzle (may require multiple attempts and/or an API key)</li>
-        <li>Input direct solution if needed</li>
-        <li>Log in to save</li>
-        <li>Repeat the process for each puzzle</li>
+        <li>Log out of LinkedIn</li>
+        <li>Go to valid puzzle page</li>
+        <li>Solve puzzle</li>
+        <li>Log in to save score</li>
       </ol>
+      <p>Notes:</p>
+      <p>If solving multiple puzzles, ensure that you log out between each one.</p>
+      <p>An openAI API key is needed for some functionality, but it is not nessessary get the solution for each puzzle.</p>
     </div>
 
     <!-- Links Section -->

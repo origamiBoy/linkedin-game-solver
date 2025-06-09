@@ -12,7 +12,8 @@ const GAME_CONFIG = {
             perfect: true,
             ai: false
         },
-        about: "Crown each region.",
+        tagline: "Crown each region",
+        about: "A logic puzzle where no queens can attack each other. Algrimthimcally solved.",
         controls: [
             {
                 name: "Solve",
@@ -39,7 +40,8 @@ const GAME_CONFIG = {
             perfect: true,
             ai: false
         },
-        about: "Complete the path.",
+        tagline: "Complete the path",
+        about: "Connect all the dots with a single line and use all grid cells. Algrimthimcally solved.",
         controls: [
             {
                 name: "Solve",
@@ -66,7 +68,8 @@ const GAME_CONFIG = {
             perfect: true,
             ai: false
         },
-        about: "Harmonize the grid.",
+        tagline: "Harmonize the grid",
+        about: "Fill the grid with moons and suns. Algrimthimcally solved.",
         controls: [
             {
                 name: "Solve",
@@ -93,7 +96,8 @@ const GAME_CONFIG = {
             perfect: true,
             ai: true
         },
-        about: "Guess the category.",
+        tagline: "Guess the category",
+        about: "Word puzzle for guessing the category. AI solved (or found programatically if not by AI).",
         storageKey: "pinpointSolution",
         controls: [
             {
@@ -111,7 +115,7 @@ const GAME_CONFIG = {
                 name: "Input Stored",
                 id: "input-stored-button",
                 icon: "input",
-                description: "Input a previously solved solution",
+                description: "Input a previously stored solution",
                 solveAction: "inputStoredSolution",
                 requirements: {
                     ai: false,
@@ -129,17 +133,18 @@ const GAME_CONFIG = {
         },
         backgroundColor: "#def9fc",
         tags: {
-            perfect: false,
+            perfect: true,
             ai: true
         },
-        about: "Unlock a trivia ladder.",
+        tagline: "Unlock a trivia ladder",
+        about: "Word puzzle for guessing the clues in a words ladder. AI solved (not guaranteed), found programatically, or through a saved solution.",
         storageKey: "crossclimbSolution",
         controls: [
             {
                 name: "Solve",
                 id: "solve-button",
                 icon: "play_arrow",
-                description: "Gets, solves, and saves the solution",
+                description: "Attempts to get, solve, and save the solution",
                 solveAction: "solve",
                 requirements: {
                     ai: true,
@@ -150,7 +155,7 @@ const GAME_CONFIG = {
                 name: "Input Stored",
                 id: "input-stored-button",
                 icon: "input",
-                description: "Input a previously solved solution",
+                description: "Input a previously stored solution",
                 solveAction: "inputStoredSolution",
                 requirements: {
                     ai: false,
@@ -161,7 +166,7 @@ const GAME_CONFIG = {
                 name: "Cheat",
                 id: "cheat-button",
                 icon: "psychology",
-                description: "Cheats and stores solutions",
+                description: "Programatically solves and stores solution",
                 solveAction: "cheat",
                 requirements: {
                     ai: false,

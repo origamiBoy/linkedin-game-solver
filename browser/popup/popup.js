@@ -146,7 +146,7 @@ function createGameCard(gameId, gameConfig, viewMode, showAbout = false, newTab 
     if (showAbout && gameConfig.about) {
         const about = document.createElement('p');
         about.className = 'game-card-about';
-        about.textContent = gameConfig.about;
+        about.textContent = gameConfig.tagline;
         content.appendChild(about);
     }
 
