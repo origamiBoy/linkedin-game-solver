@@ -65,11 +65,14 @@ npm run start:tango
 
 ### Pinpoint Solver
 ```bash
-# Get new solution
+# Get new solution (defaults to direct if AI fails)
 npm run start:pinpoint:get
 
 # Use stored solution
 npm run start:pinpoint:stored
+
+# Get direct solution (no AI)
+npm run start:pinpoint:direct
 
 # Default solver (Get)
 npm run start:pinpoint
@@ -77,11 +80,14 @@ npm run start:pinpoint
 
 ### Crossclimb Solver
 ```bash
-# Get new solution
+# Get new solution (AI)
 npm run start:crossclimb:get
 
 # Use stored solution
 npm run start:crossclimb:stored
+
+# Get direct solution (no AI)
+npm run start:crossclimb:direct
 
 # Default solver (Get)
 npm run start:crossclimb
@@ -99,13 +105,14 @@ npm run start:crossclimb
 - Implements multiple attempts with different strategies
 - Stores successful solutions for future use
 - Can use stored solutions to quickly solve repeated puzzles
+- Employs direct methods to get solutions without solving or AI
 
 ## Notes
 
 - All solvers run in non-headless mode for visibility
 - OpenAI-based solvers require an OpenAI API key
 - Script solutions are cached in JSON files for future use
-- The extension version provides a more user-friendly interface
+- The extension contains dynamic UI with additional functionality
 
 ## Contributing
 
