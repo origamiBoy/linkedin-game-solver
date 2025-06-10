@@ -24,10 +24,22 @@
         </button>
       </div>
     </div>
+    <div class="game-info-solving-row" id="gameInfoSolvingRow" style="display: none;">
+      <div class="game-info-left">
+        <img id="gameInfoSolvingIcon" class="game-info-icon" alt="Solving Game Icon">
+        <span id="gameInfoSolvingName" class="game-info-name"></span>
+        <div class="game-info-divider"></div>
+        <span class="game-info-solving-text">Currently solving</span>
+      </div>
+      <div class="game-info-right" id="gameInfoSolvingRight">
+      </div>
+    </div>
     <div class="game-info-row" id="gameInfoRow" style="display: none;">
       <div class="game-info-left">
         <img id="gameInfoIcon" class="game-info-icon" alt="Game Icon">
         <span id="gameInfoName" class="game-info-name"></span>
+        <div class="game-info-divider"></div>
+        <span class="game-info-solving-text">Detected game</span>
       </div>
       <div class="game-info-right">
         <button class="game-info-button" id="gameInfoPuzzleButton" title="Show Game Controls">
@@ -164,14 +176,14 @@
         <div class="control-description" id="controlDescription"></div>
       </div>
       <div class="controls-actions">
-        <button class="refresh-button" id="refreshButton" title="Refresh Page">
+        <button class="icon-button" id="refreshButton" title="Refresh Page">
           <span class="material-icons">refresh</span>
         </button>
         <button class="start-button" id="startButton" disabled>
           <span class="material-icons">play_arrow</span>
           <span>Start</span>
         </button>
-        <button class="cancel-button" id="cancelButton" disabled>
+        <button class="icon-button" id="cancelButton" disabled>
           <span class="material-icons">close</span>
           <span>Cancel</span>
         </button>

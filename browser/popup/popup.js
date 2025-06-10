@@ -18,7 +18,6 @@ let selectedControl = null;
 // Initialize DOM elements
 const elements = {
     status: document.getElementById('status'),
-    solvingStatus: document.getElementById('solvingStatus'),
     apiKeySection: document.getElementById('apiKeySection'),
     apiKeyContent: document.getElementById('apiKeyContent'),
     apiKeyHeader: document.getElementById('apiKeyHeader'),
@@ -32,6 +31,10 @@ const elements = {
     gameInfoName: document.getElementById('gameInfoName'),
     gameInfoPuzzleButton: document.getElementById('gameInfoPuzzleButton'),
     gameInfoHelpButton: document.getElementById('gameInfoHelpButton'),
+    gameInfoSolvingRow: document.getElementById('gameInfoSolvingRow'),
+    gameInfoSolvingIcon: document.getElementById('gameInfoSolvingIcon'),
+    gameInfoSolvingName: document.getElementById('gameInfoSolvingName'),
+    gameInfoSolvingRight: document.getElementById('gameInfoSolvingRight'),
     gameAboutSection: document.getElementById('gameAboutSection'),
     linksGameCardsContainer: document.getElementById('linksGameCardsContainer'),
     headerRow: document.getElementById('headerRow')
@@ -297,7 +300,7 @@ function updateStartButton() {
 // Function to create a cancel button
 function createCancelButton(state, isIconOnly = false) {
     const button = document.createElement('button');
-    button.className = isIconOnly ? 'icon-button cancel-icon-button' : 'game-control-button cancel';
+    button.className = isIconOnly ? 'icon-button' : 'cancel-button';
     button.id = 'cancelButton';
     button.title = 'Cancel';
     button.innerHTML = isIconOnly ?
@@ -455,14 +458,6 @@ async function updateGameCardsView(viewMode, container = 'gameCardsContainer') {
     // Get current state to check if solving
     const state = await getLatestState();
 
-    // Add cancel button at the top if solving
-    if (state?.isSolving && container === 'gameCardsContainer') {
-        const cancelButton = createCancelButton(state, false);
-        const cancelContainer = document.createElement('div');
-        cancelContainer.style.marginBottom = '8px';
-        cancelContainer.appendChild(cancelButton);
-        containerElement.appendChild(cancelContainer);
-    }
 
     // Set container class and add game cards
     containerElement.className = `game-cards-container ${viewMode}`;
@@ -497,8 +492,9 @@ const updateUI = async (state) => {
         state = await getLatestState();
     }
 
-    // Update game info row
+    // Update game info rows
     if (elements.gameInfoRow && elements.gameInfoIcon && elements.gameInfoName) {
+        // Handle main game info row
         if (state?.gameType && state.gameType !== 'Unknown') {
             elements.gameInfoRow.style.display = 'flex';
             const gameConfig = GAME_CONFIG[state.gameType.toLowerCase()];
@@ -519,49 +515,54 @@ const updateUI = async (state) => {
             // Divider styling
             elements.headerRow?.classList.remove('hasDivider');
         }
-    }
 
-    // Update solving status
-    if (elements.solvingStatus) {
-        if (state?.solvingGameType && state.solvingGameType !== state?.gameType) {
-            elements.solvingStatus.textContent = `Currently Solving: ${state.solvingGameType}`;
-            elements.solvingStatus.style.display = 'block';
+        // Handle solving game info row
+        if (state?.solvingGameType && state.solvingGameType !== state.gameType) {
+            elements.gameInfoSolvingRow.style.display = 'flex';
+            const solvingGameConfig = GAME_CONFIG[state.solvingGameType.toLowerCase()];
+            if (solvingGameConfig) {
+                elements.gameInfoSolvingIcon.src = solvingGameConfig.icon.normal;
+                elements.gameInfoSolvingName.textContent = solvingGameConfig.name;
+            }
+            // Divider styling
+            elements.headerRow?.classList.add('hasDivider');
+
+            // Add cancel button to solving row
+            if (elements.gameInfoSolvingRight) {
+                // Clear existing cancel button
+                elements.gameInfoSolvingRight.innerHTML = '';
+                // Create and add new cancel button
+                const cancelButton = createCancelButton(state, false);
+                elements.gameInfoSolvingRight.appendChild(cancelButton);
+            }
+
+
+            const divider = elements.gameInfoRow.querySelector('.game-info-divider');
+            const solvingText = elements.gameInfoRow.querySelector('.game-info-solving-text');
+            if (divider) divider.style.display = 'block';
+            if (solvingText) solvingText.style.display = 'inline';
+
         } else {
-            elements.solvingStatus.style.display = 'none';
+            elements.gameInfoSolvingRow.style.display = 'none';
+            // Divider styling
+            if (!(state?.gameType && state.gameType !== 'Unknown')) {
+                elements.headerRow?.classList.remove('hasDivider');
+            }
+            // Clear cancel button
+            if (elements.gameInfoSolvingRight) {
+                elements.gameInfoSolvingRight.innerHTML = '';
+            }
+
+            const divider = elements.gameInfoRow.querySelector('.game-info-divider');
+            const solvingText = elements.gameInfoRow.querySelector('.game-info-solving-text');
+            if (divider) divider.style.display = 'none';
+            if (solvingText) solvingText.style.display = 'none';
         }
     }
 
     // Update game controls and single game card
     const gameControlsContainer = document.getElementById('gameControlsContainer');
     const singleGameCardContainer = document.getElementById('singleGameCardContainer');
-    const gameCardsContainer = document.getElementById('gameCardsContainer');
-
-    // Handle cancel button visibility for non-correct URL scenarios
-    if (state.isSolving) {
-        const cancelButton = createCancelButton(state, false);
-
-        // If we're on the home view, add cancel button to game cards container
-        if (contentManager?.isSectionActive('home') && gameCardsContainer) {
-            // Remove any existing cancel button
-            const existingCancel = gameCardsContainer.querySelector('.game-control-button.cancel');
-            if (existingCancel) {
-                existingCancel.parentElement.remove();
-            }
-            // Add cancel button to game cards container
-            const cancelContainer = document.createElement('div');
-            cancelContainer.style.marginBottom = '8px';
-            cancelContainer.appendChild(cancelButton);
-            gameCardsContainer.insertBefore(cancelContainer, gameCardsContainer.firstChild);
-        }
-    } else {
-        // Remove cancel button from game cards if not solving
-        if (gameCardsContainer) {
-            const existingCancel = gameCardsContainer.querySelector('.game-control-button.cancel');
-            if (existingCancel) {
-                existingCancel.parentElement.remove();
-            }
-        }
-    }
 
     if (gameControlsContainer && singleGameCardContainer) {
         // Clear existing controls
@@ -587,15 +588,6 @@ const updateUI = async (state) => {
 
                     const card = createGameCard(state.gameType.toLowerCase(), gameConfig, 'grid', true, false);
                     singleGameCardContainer.appendChild(card);
-
-                    // Add full cancel button after game card if solving
-                    if (state?.isSolving) {
-                        const cancelButton = createCancelButton(state, false);
-                        const cancelContainer = document.createElement('div');
-                        cancelContainer.style.marginTop = '8px';
-                        cancelContainer.appendChild(cancelButton);
-                        singleGameCardContainer.appendChild(cancelContainer);
-                    }
                 }
             }
         }

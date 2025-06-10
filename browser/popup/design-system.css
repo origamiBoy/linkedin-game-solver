@@ -226,35 +226,26 @@ body {
 }
 
 .cancel-button {
-  width: 60px;
-  height: var(--button-height-sm);
-  background-color: var(--color-danger-light);
-  border: 1px solid var(--color-text-secondary);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  padding: 0;
+  padding: 0 var(--spacing-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  font-weight: bold;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
   transition: all var(--transition-fast);
+  background-color: var(--color-background-alt);
+  border: 1px solid var(--color-border);
 }
 
 .cancel-button:hover:not(:disabled) {
-  background-color: var(--color-danger-hover);
-  border-color: var(--color-text-secondary);
+  background-color: var(--color-background-hover);
+  border-color: var(--color-border-hover);
 }
 
 .cancel-button:disabled {
-  background-color: var(--color-danger-light);
-  opacity: 0.7;
+  background-color: var(--color-disabled);
+  color: var(--color-disabled-text);
   border-color: var(--color-border);
-}
-
-.cancel-button.solving {
-  background-color: var(--color-danger-hover);
 }
 
 /* Game Card Styles */
@@ -420,6 +411,23 @@ body {
   justify-content: center;
   color: var(--color-dark-text);
   transition: background-color var(--transition-fast);
+}
+
+/* Game Info Row Styles */
+
+.game-info-solving-row {
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.game-info-solving-text {
+  color: var(--color-dark-text);
+  font-size: var(--font-size-sm);
+}
+
+.game-info-divider {
+  width: 1px;
+  height: var(--icon-size-md);
+  background-color: var(--color-dark-border);
 }
 
 .game-info-button:hover {
