@@ -644,27 +644,23 @@ class ContentManager {
             try {
                 const state = await getLatestState();
                 const viewPreference = await getViewPreference(state);
-                this.showSection('home');
-                this.updateHeaderButtonStates('home');
+                this.showSection('home', true);
                 await updateGameCardsView(viewPreference);
             } catch (error) {
                 console.warn('Error getting state for home view:', error);
-                this.showSection('home');
-                this.updateHeaderButtonStates('home');
+                this.showSection('home', true);
                 await updateGameCardsView('list');
             }
         });
 
         this.headerButtons.settings.addEventListener('click', () => {
-            this.showSection('settings');
-            this.updateHeaderButtonStates('settings');
+            this.showSection('settings', true);
         });
 
         document.querySelectorAll('.menu-item').forEach(item => {
             item.addEventListener('click', () => {
                 const sectionId = item.getAttribute('data-section');
-                this.showSection(sectionId);
-                this.updateHeaderButtonStates(null);
+                this.showSection(sectionId, false);
             });
         });
 
@@ -672,7 +668,6 @@ class ContentManager {
             button.addEventListener('click', () => {
                 const sectionId = button.getAttribute('data-section');
                 this.hideSection(sectionId);
-                this.updateHeaderButtonStates(null);
             });
         });
     }
@@ -684,9 +679,9 @@ class ContentManager {
         }
     }
 
-    async showSection(sectionId) {
+    async showSection(sectionId, updateSameHeader = true) {
         // Get latest state before showing section
-        const state = await getLatestState();
+        // const state = await getLatestState();
 
         this.mainContent.classList.remove('active');
         this.contentManager.classList.add('active');
@@ -707,12 +702,14 @@ class ContentManager {
 
         document.getElementById('modalMenu')?.classList.remove('visible');
 
-        // Update UI with latest state
-        await updateUI(state);
+        // // Update UI with latest state
+        // await updateUI(state);
+
+        // Update header button states based on updateSameHeader parameter
+        this.updateHeaderButtonStates(updateSameHeader ? sectionId : null);
     }
 
     async hideSection(sectionId) {
-
         // State needed for home page redirect on close if necessary
         // Get state first
         let state;
@@ -731,8 +728,7 @@ class ContentManager {
         if (state?.gameType && state.gameType !== 'Unknown') {
             this.mainContent.classList.add('active');
         } else {
-            this.showSection('home');
-            this.updateHeaderButtonStates('home');
+            this.showSection('home', true);
         }
 
         this.currentSection = null;
@@ -775,8 +771,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.menu-item').forEach(item => {
         item.addEventListener('click', async () => {
             const sectionId = item.getAttribute('data-section');
-            contentManager.showSection(sectionId);
-            contentManager.updateHeaderButtonStates(null);
+            contentManager.showSection(sectionId, false);
 
             // Update links view when switching to links section
             if (sectionId === 'links') {
@@ -817,6 +812,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Listen for messages from background script
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.action === 'updateState') {
+            // Show appropriate content based on initial state
+            if (request.state?.gameType && request.state.gameType !== 'Unknown') {
+                contentManager.showMainContent();
+            } else {
+                contentManager.showSection('home', true);
+            }
             updateUI(request.state || {});
         } else if (request.action === 'solveComplete') {
             // Only reset selected control if solving was successful
@@ -824,6 +825,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 selectedControl = null;
                 updateControlDescription(null);
                 updateStartButton();
+            }
+            if (request.state?.gameType && request.state.gameType !== 'Unknown') {
+                contentManager.showMainContent();
+            } else {
+                contentManager.showSection('home', true);
             }
             updateUI(request.state || {});
         }
@@ -833,8 +839,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (initialState?.gameType && initialState.gameType !== 'Unknown') {
         contentManager.showMainContent();
     } else {
-        contentManager.showSection('home');
-        contentManager.updateHeaderButtonStates('home');
+        contentManager.showSection('home', true);
     }
 
     // Update UI with initial state
