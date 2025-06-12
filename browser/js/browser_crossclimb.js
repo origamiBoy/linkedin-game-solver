@@ -669,7 +669,7 @@ class CrossclimbSolver {
                 return { solutions: false, invalidWords: Array.from(invalidWordsCombined), error: "OpenAI error" };
             }
         }
-        return { solutions: false, invalidWords: Array.from(invalidWordsCombined) };
+        return { solutions: false, invalidWords: Array.from(invalidWordsCombined), error: "Maximum attempts reached" };
     }
 
     async finalClueCheckSolution() {
@@ -801,10 +801,7 @@ class CrossclimbSolver {
 
     async finalClueParse() {
         if (this.shouldStop) {
-            return {
-                success: false,
-                error: "Solving stopped by user"
-            };
+            return { success: false, error: "Solving stopped by user" };
         }
         const clue = document.querySelector('.crossclimb__clue');
         if (!clue) return '';
@@ -838,11 +835,7 @@ class CrossclimbSolver {
 
             let result = await this.finalClueFindSolution(finalClue, middleSolutions, undoResult);
             if (result.error) {
-                return {
-                    success: false,
-                    solutions: false,
-                    error: result.error
-                }
+                return { success: false, solutions: false, error: result.error };
             }
             finalSolutions = result.solutions;
 
@@ -902,20 +895,11 @@ class CrossclimbSolver {
         }
         const middleSolutions = await this.solveMiddleClues();
         if (middleSolutions.error) {
-            return {
-                success: false,
-                rearrangedChain: [],
-                error: middleSolutions.error
-            };
+            return { success: false, rearrangedChain: [], error: middleSolutions.error };
         }
         else if (!middleSolutions) {
-            return {
-                success: false,
-                rearrangedChain: [],
-                error: 'Failed to find valid middle solutions after all attempts'
-            };
+            return { success: false, rearrangedChain: [], error: 'Maximum attempts reached' };
         }
-
         const sortedMiddleSolutions = [...middleSolutions].sort((a, b) => a.final_order - b.final_order);
         const orderedMiddleWords = sortedMiddleSolutions.map(s => s.word);
 
@@ -935,7 +919,7 @@ class CrossclimbSolver {
             return {
                 success: false,
                 rearrangedChain: [],
-                error: 'Failed to find valid final solutions after all attempts'
+                error: 'Maximum attempts reached'
             };
         }
 
@@ -1155,7 +1139,7 @@ class CrossclimbSolver {
 
         const arrangedSolution = this.arrangeWordChain(words);
         if (!arrangedSolution) {
-            return { success: false, rearrangedChain: [], error: "Could not arrange middle clues into valid chain" };
+            return { success: false, rearrangedChain: [], error: "Rearrange middle clues chain failed" };
         }
 
         const solutions = this.findRearrangedValues(words, arrangedSolution);
@@ -1392,17 +1376,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
                 // If input was stopped and failed
                 if (!result.success) {
-                    if (result.error === 'Maximum attempts reached' || result.error === 'OpenAI error') {
-                        chrome.runtime.sendMessage({
-                            action: 'solveComplete',
-                            success: false,
-                            result: { message: result.error }
-                        });
-                    } else {
+
+                    if (result.error === 'Solving stopped by user') {
                         chrome.runtime.sendMessage({
                             action: 'solveComplete',
                             success: false,
                             result: { message: 'Closed Execution' }
+                        });
+                        //errors are maximum attempts reached, openai error
+                    } else {
+                        chrome.runtime.sendMessage({
+                            action: 'solveComplete',
+                            success: false,
+                            result: { error: result.error }
                         });
                     }
                     sendResponse({ success: true });

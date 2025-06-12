@@ -337,7 +337,7 @@ class PinpointSolver {
                 success: false,
                 solutions: this.solutions,
                 attemptsMade: currentAttempt,
-                error: `Failed to refresh: ${error.message}`
+                error: 'Failed to refresh'
             };
         }
     }
@@ -402,7 +402,7 @@ class PinpointSolver {
                 await chrome.storage.local.remove('pinpointSolveState');
                 return {
                     success: false,
-                    error: 'Failed to input template solution'
+                    error: 'Failed to input solution'
                 };
             }
 
@@ -430,7 +430,7 @@ class PinpointSolver {
                     await chrome.storage.local.remove('pinpointSolveState');
                     return {
                         success: false,
-                        error: 'Failed to parse actual solution'
+                        error: 'Failed to parse solution'
                     };
                 }
             }
@@ -448,7 +448,7 @@ class PinpointSolver {
         await chrome.storage.local.remove('pinpointSolveState');
         return {
             success: false,
-            error: 'Unexpected end of direct solution process'
+            error: 'Direct solution failed'
         };
     }
 }
@@ -524,17 +524,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
                 // If input was stopped and failed
                 if (!result.success) {
-                    if (result.error === 'Maximum attempts reached' || result.error === 'OpenAI error') {
+                    if (result.error === 'Solving stopped by user') {
                         chrome.runtime.sendMessage({
                             action: 'solveComplete',
                             success: false,
-                            result: { message: result.error }
+                            result: { message: 'Closed Execution' }
                         });
                     } else {
                         chrome.runtime.sendMessage({
                             action: 'solveComplete',
                             success: false,
-                            result: { message: 'Closed Execution' }
+                            result: { error: result.error }
                         });
                     }
                     sendResponse({ success: true });

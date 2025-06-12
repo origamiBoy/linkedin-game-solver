@@ -203,7 +203,7 @@ async function createControlCard(control, gameType, state) {
         if (selectedControl === control) {
             selectedControl = null;
             updateControlDescription(null);
-            updateStartButton();
+            updateStartButton(state);
         }
     }
 
@@ -255,7 +255,7 @@ async function createControlCard(control, gameType, state) {
             selectedControl = null;
             card.classList.remove('selected');
             updateControlDescription(null);
-            updateStartButton();
+            updateStartButton(state);
             return;
         }
 
@@ -269,7 +269,7 @@ async function createControlCard(control, gameType, state) {
         selectedControl = control;
         card.classList.add('selected');
         updateControlDescription(control);
-        updateStartButton();
+        updateStartButton(state);
     });
 
     return card;
@@ -290,11 +290,11 @@ function updateControlDescription(control) {
 }
 
 // Function to update start button state
-function updateStartButton() {
+function updateStartButton(state) {
     const startButton = document.getElementById('startButton');
     if (!startButton) return;
 
-    startButton.disabled = !selectedControl;
+    startButton.disabled = !selectedControl || state?.isSolving;
 }
 
 // Function to create a cancel button
@@ -434,6 +434,8 @@ async function updateGameControls(gameConfig, state) {
             requiresApiKey: selectedControl.requirements?.ai || false
         });
     };
+
+    updateStartButton(state);
 
     // Set up cancel button
     cancelButton.disabled = !state?.isSolving;
@@ -824,7 +826,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (request.success) {
                 selectedControl = null;
                 updateControlDescription(null);
-                updateStartButton();
+                updateStartButton(request.state || {});
             }
             if (request.state?.gameType && request.state.gameType !== 'Unknown') {
                 contentManager.showMainContent();

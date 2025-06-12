@@ -402,17 +402,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                             state.statusMessage = 'Solving stopped';
                             state.statusType = 'error';
                         }
-                    } else if (request.result && request.result.message === 'Maximum attempts reached') {
-                        state.statusMessage = 'Maximum attempts reached';
-                        state.statusType = 'error';
-                    } else if (request.result && request.result.message === 'OpenAI error') {
-                        state.statusMessage = 'OpenAI error';
-                        state.statusType = 'error';
                     } else if (request.result && request.result.error) {
-                        state.statusMessage = `Failed to solve: ${request.result.error}`;
+                        state.statusMessage = request.result.error;
                         state.statusType = 'error';
                     } else if (request.error) {
-                        state.statusMessage = `Failed to solve: ${request.error}`;
+                        state.statusMessage = request.error;
                         state.statusType = 'error';
                     } else {
                         state.statusMessage = 'Failed to solve puzzle';
