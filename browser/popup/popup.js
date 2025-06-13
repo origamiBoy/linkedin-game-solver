@@ -73,16 +73,36 @@ function showStatus(message, type = 'ready', state) {
         let loginButton = elements.status.querySelector('.status-login-button');
         if (type === 'success') {
             if (!loginButton) {
+                // Create login button
                 loginButton = document.createElement('button');
                 loginButton.className = 'status-login-button';
+                /*
+                // Can not get the log out functionality to work when logged in to LinkedIn
+                // If not guest, show log out
+                if (state?.hasResultsUrl && !state?.hasGuestUrl) {
+                    loginButton.textContent = 'Log Out';
+                    loginButton.addEventListener('click', () => {
+                        chrome.runtime.sendMessage({ action: 'clickLogoutButton' });
+                        console.log('clickLogoutButton');
+                    });
+                } else {
+                    // If guest results or general success, show log in
+                    loginButton.textContent = 'Log In';
+                    loginButton.addEventListener('click', () => {
+                        chrome.runtime.sendMessage({ action: 'clickLoginButton' });
+                    });
+                }
+                */
                 loginButton.textContent = 'Log In';
                 loginButton.addEventListener('click', () => {
                     chrome.runtime.sendMessage({ action: 'clickLoginButton' });
                 });
                 elements.status.appendChild(loginButton);
             }
-            // Enable/disable button based on hasResultsUrl
-            loginButton.disabled = !state?.hasResultsUrl;
+
+            // if log out is funtional
+            //loginButton.disabled = !state?.hasResultsUrl;
+            loginButton.disabled = !state?.hasResultsUrl || !state?.hasGuestUrl;
         } else if (loginButton) {
             loginButton.remove();
         }

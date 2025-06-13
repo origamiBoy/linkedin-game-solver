@@ -13,8 +13,9 @@ const state = {
     refreshStartTime: null,
     activeButton: null,
     viewPreference: 'list', // 'list' or 'grid'
-    hasCorrectUrl: false, // New state to track URL match
-    hasResultsUrl: false // New state to track results URL
+    hasCorrectUrl: false,
+    hasResultsUrl: false,
+    hasGuestUrl: false
 };
 
 // Import game config for service worker
@@ -79,6 +80,7 @@ async function updateCurrentTab() {
             state.isReady = false;
             state.hasCorrectUrl = false;
             state.hasResultsUrl = false;
+            state.hasGuestUrl = false;
             await persistState();
             return;
         }
@@ -93,6 +95,7 @@ async function updateCurrentTab() {
         const expectedUrl = getGameUrl(state.gameType);
         state.hasCorrectUrl = state.gameType !== 'Unknown' && tab.url === expectedUrl;
         state.hasResultsUrl = tab.url.includes('/results/');
+        state.hasGuestUrl = tab.url.includes('/guest/');
 
         // Update status based on solving state and URL
         if (state.isSolving) {
@@ -114,8 +117,12 @@ async function updateCurrentTab() {
                     state.statusType = 'ready';
                     state.isReady = true;
                 }
-            } else {
+            } else if (state.hasGuestUrl) {
                 state.statusMessage = 'Puzzle Solved Successfully';
+                state.statusType = 'success';
+                state.isReady = false;
+            } else {
+                state.statusMessage = 'Puzzle Saved Successfully';
                 state.statusType = 'success';
                 state.isReady = false;
             }
@@ -130,6 +137,7 @@ async function updateCurrentTab() {
         state.isReady = false;
         state.hasCorrectUrl = false;
         state.hasResultsUrl = false;
+        state.hasGuestUrl = false;
         await persistState();
     }
 }
@@ -174,7 +182,8 @@ async function updatePopupState() {
                 solvingWithApiKey: state.solvingWithApiKey,
                 viewPreference: state.viewPreference,
                 hasCorrectUrl: state.hasCorrectUrl,
-                hasResultsUrl: state.hasResultsUrl
+                hasResultsUrl: state.hasResultsUrl,
+                hasGuestUrl: state.hasGuestUrl
             }
         }).catch(error => {
             // Ignore connection errors when popup is closed
@@ -305,7 +314,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 // Handle refresh in progress
                 if (state.isRefreshing) {
                     // Reset refresh state if it's been too long
-                    if (state.refreshStartTime && Date.now() - state.refreshStartTime > 5000) {
+                    if (state.refreshStartTime && Date.now() - state.refreshStartTime > 2000) {
                         state.isRefreshing = false;
                         state.refreshStartTime = null;
                     } else {
