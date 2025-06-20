@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <title>LinkedIn Puzzle Solver</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -13,20 +13,20 @@
         <h2>Solver</h2>
       </div>
       <div class="header-right">
-        <button class="header-button" id="homeButton" title="Home">
-          <p class="material-icons">home</p>
+        <button type="button" class="header-button" id="homeButton" title="Home">
+          <span class="material-icons">home</span>
         </button>
-        <button class="header-button" id="settingsButton" title="Settings">
-          <p class="material-icons">settings</p>
+        <button type="button" class="header-button" id="settingsButton" title="Settings">
+          <span class="material-icons">settings</span>
         </button>
-        <button class="header-button" id="kebabButton" title="Menu">
-          <p class="material-icons">more_vert</p>
+        <button type="button" class="header-button" id="kebabButton" title="Menu">
+          <span class="material-icons">more_vert</span>
         </button>
       </div>
     </div>
     <div class="game-info-solving-row" id="gameInfoSolvingRow" style="display: none;">
       <div class="game-info-left">
-        <img id="gameInfoSolvingIcon" class="game-info-icon" alt="Solving Game Icon">
+        <img id="gameInfoSolvingIcon" class="game-info-icon" alt="Solving Game Icon" src="'../../icons/game/placeholder.svg'">
         <span id="gameInfoSolvingName" class="game-info-name"></span>
         <div class="game-info-divider"></div>
         <span class="game-info-solving-text">Currently solving</span>
@@ -36,17 +36,17 @@
     </div>
     <div class="game-info-row" id="gameInfoRow" style="display: none;">
       <div class="game-info-left">
-        <img id="gameInfoIcon" class="game-info-icon" alt="Game Icon">
+        <img id="gameInfoIcon" class="game-info-icon" alt="Game Icon" src="'../../icons/game/placeholder.svg'">
         <span id="gameInfoName" class="game-info-name"></span>
         <div class="game-info-divider"></div>
         <span class="game-info-solving-text">Detected game</span>
       </div>
       <div class="game-info-right">
-        <button class="game-info-button" id="gameInfoPuzzleButton" title="Show Game Controls">
-          <p class="material-icons">extension</p>
+        <button type="button" class="game-info-button" id="gameInfoPuzzleButton" title="Show Game Controls">
+          <span class="material-icons">extension</span>
         </button>
-        <button class="game-info-button" id="gameInfoHelpButton" title="Show Game Info">
-          <p class="material-icons">help_outline</p>
+        <button type="button" class="game-info-button" id="gameInfoHelpButton" title="Show Game Info">
+          <span class="material-icons">help_outline</span>
         </button>
       </div>
     </div>
@@ -75,9 +75,9 @@
     <div class="content-section" id="homeSection">
       <div class="content-header">
         <h3>Puzzle Links</h3>
-        <div style="display: flex; align-items: center; gap: 5px;">
-          <button class="view-toggle" id="viewToggle" title="Toggle view">
-            <p class="material-icons">grid_view</p>
+        <div class="view-toggle-container">
+          <button type="button" class="view-toggle" id="viewToggle" title="Toggle view">
+            <span class="material-icons">grid_view</span>
           </button>
         </div>
       </div>
@@ -101,8 +101,8 @@
         <div class="api-key-content" id="apiKeyContent">
           <input type="password" id="apiKeyInput" placeholder="Enter OpenAI API Key">
           <div class="api-key-actions">
-            <button class="api-key-button save-key-btn" id="saveApiKey">Save Key</button>
-            <button class="api-key-button delete-key-btn" id="deleteApiKey">Delete Key</button>
+            <button type="button" class="api-key-button save-key-btn" id="saveApiKey">Save Key</button>
+            <button type="button" class="api-key-button delete-key-btn" id="deleteApiKey">Delete Key</button>
           </div>
         </div>
       </div>
@@ -113,24 +113,24 @@
     <div class="content-section" id="aboutSection">
       <div class="content-header">
         <h3>About</h3>
-        <button class="close-button" data-section="about">
-          <p class="material-icons">close</p>
+        <button type="button" class="close-button" data-section="about">
+          <span class="material-icons">close</span>
         </button>
       </div>
-      <p>Contains solvers for each LinkedIn puzzle game. Solutions are found:
-        <ul>
-          <li>Algrithimcally (using logic and code)</li>
-          <li>Programatically (taking answers directly from the webpage)</li>
-          <li>AI (for the words problems)</li>
-        </ul>
-        Some puzzles also allow solutions to be stored, and then later inputted without the delay required in solving them. It is designed to allow users to save scores to LinkedIn.</p>
+      <p>Contains solvers for each LinkedIn puzzle game. Solutions are found:</p>
+      <ul>
+        <li>Algrithimcally (using logic and code)</li>
+        <li>Programatically (taking answers directly from the webpage)</li>
+        <li>AI (for the words problems)</li>
+      </ul>
+      <p>Some puzzles also allow solutions to be stored, and then later inputted without the delay required in solving them. It is designed to allow users to save scores to LinkedIn.</p>
     </div>
 
     <div class="content-section" id="stepsSection">
       <div class="content-header">
         <h3>Save scores to LinkedIn</h3>
-        <button class="close-button" data-section="steps">
-          <p class="material-icons">close</p>
+        <button type="button" class="close-button" data-section="steps">
+          <span class="material-icons">close</span>
         </button>
       </div>
       <ol>
@@ -148,8 +148,8 @@
     <div class="content-section" id="linksSection">
       <div class="content-header">
         <h3>Puzzle Links</h3>
-        <button class="close-button" data-section="links">
-          <p class="material-icons">close</p>
+        <button type="button" class="close-button" data-section="links">
+          <span class="material-icons">close</span>
         </button>
       </div>
       <p>Alternative puzzle links and helpful resources</p>
@@ -176,14 +176,14 @@
         <div class="control-description" id="controlDescription"></div>
       </div>
       <div class="controls-actions">
-        <button class="icon-button" id="refreshButton" title="Refresh Page">
+        <button type="button" class="icon-button" id="refreshButton" title="Refresh Page">
           <span class="material-icons">refresh</span>
         </button>
-        <button class="start-button" id="startButton" disabled>
+        <button type="button" class="start-button" id="startButton" disabled>
           <span class="material-icons">play_arrow</span>
           <span>Start</span>
         </button>
-        <button class="icon-button" id="cancelButton" disabled>
+        <button type="button" class="icon-button" id="cancelButton" disabled>
           <span class="material-icons">close</span>
           <span>Cancel</span>
         </button>

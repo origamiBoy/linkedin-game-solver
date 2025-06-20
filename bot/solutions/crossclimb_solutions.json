@@ -1,33 +1,33 @@
 {
   "middleSolutions": [
     {
+      "final_order": 0,
+      "word": "crime"
+    },
+    {
       "final_order": 2,
-      "word": "rock"
+      "word": "chile"
     },
     {
       "final_order": 1,
-      "word": "rook"
-    },
-    {
-      "final_order": 3,
-      "word": "mock"
-    },
-    {
-      "final_order": 0,
-      "word": "root"
+      "word": "chime"
     },
     {
       "final_order": 4,
-      "word": "monk"
+      "word": "whale"
+    },
+    {
+      "final_order": 3,
+      "word": "while"
     }
   ],
   "rearrangedChain": [
-    "hoot",
-    "root",
-    "rook",
-    "rock",
-    "mock",
-    "monk",
-    "honk"
+    "prime",
+    "crime",
+    "chime",
+    "chile",
+    "while",
+    "whale",
+    "whole"
   ]
 }

@@ -503,7 +503,7 @@ body {
   font-style: italic;
 }
 
-.control-card.api-key-required.selected:disabled span:last  -child::after {
+.control-card.api-key-required.selected:disabled span:last-child::after {
   content: " (API Key Required)";
   font-size: var(--font-size-xs);
   font-style: italic;
@@ -975,6 +975,12 @@ body {
 
 
 /* View Toggle */
+.view-toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .view-toggle {
   width: var(--icon-size-lg);
   height: var(--icon-size-lg);

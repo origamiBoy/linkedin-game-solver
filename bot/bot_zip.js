@@ -83,8 +83,8 @@ function visualizeBoard(board, edges, path = []) {
             let edgeRow = '   ';
             for (let j = 0; j < BOARD_SIZE; j++) {
                 const edge = edges.vertical[i][j];
-                edgeRow += edge.state === EdgeState.FILLED ? '-' : ' ';
-                edgeRow += '   ';
+                edgeRow += edge.state === EdgeState.FILLED ? '---' : '   ';
+                edgeRow += ' ';
             }
             console.log(edgeRow);
         }
