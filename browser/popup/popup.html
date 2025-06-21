@@ -54,19 +54,19 @@
   </div>
 
   <!-- Modal Menu -->
-  <div class="modal-menu" id="modalMenu">
-    <div class="menu-item" data-section="about">
-      <p class="material-icons">info_outline</p>
+  <div class="modal-menu" id="modalMenu" role="menu" aria-hidden="true" tabindex="-1">
+    <button type="button" class="menu-item" data-section="about" role="menuitem">
+      <span class="material-icons">info_outline</span>
       <span>About</span>
-    </div>
-    <div class="menu-item" data-section="steps">
-      <p class="material-icons">list</p>
+    </button>
+    <button type="button" class="menu-item" data-section="steps" role="menuitem">
+      <span class="material-icons">list</span>
       <span>Steps</span>
-    </div>
-    <div class="menu-item" data-section="links">
-      <p class="material-icons">link</p>
+    </button>
+    <button type="button" class="menu-item" data-section="links" role="menuitem">
+      <span class="material-icons">link</span>
       <span>Links</span>
-    </div>
+    </button>
   </div>
 
   <!-- Content Manager -->
@@ -99,6 +99,7 @@
           <span>&#9656;</span>
         </div>
         <div class="api-key-content" id="apiKeyContent">
+          <label for="apiKeyInput" class="api-key-label">API Key:</label>
           <input type="password" id="apiKeyInput" placeholder="Enter OpenAI API Key">
           <div class="api-key-actions">
             <button type="button" class="api-key-button save-key-btn" id="saveApiKey">Save Key</button>

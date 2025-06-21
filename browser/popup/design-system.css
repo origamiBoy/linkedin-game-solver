@@ -738,6 +738,12 @@ body {
   padding: var(--spacing-md);
   cursor: pointer;
   position: relative;
+  background: none;
+  border: none;
+  width: 100%;  
+  text-align: left;
+  font-family: inherit;
+  font-size: inherit;
 }
 
 .menu-item:not(:last-child) span::after {
@@ -765,16 +771,9 @@ body {
   border-bottom-right-radius: var(--radius-md);
 }
 
-.menu-item p {
-  margin: 0;
-  width: var(--icon-size-lg);
-  text-align: center;
-  color: var(--color-text-secondary);
-}
 
 .menu-item span {
-  flex-grow: 1;
-  margin-left: var(--spacing-md);
+  margin-right: var(--spacing-md);
   color: var(--color-text-secondary);
 }
 
@@ -884,6 +883,12 @@ body {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   box-sizing: border-box;
+}
+
+.api-key-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 /* Settings Section */

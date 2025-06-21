@@ -723,6 +723,8 @@ class ContentManager {
         }
 
         document.getElementById('modalMenu')?.classList.remove('visible');
+        document.getElementById('modalMenu')?.setAttribute('aria-hidden', 'true');
+        document.getElementById('modalMenu')?.setAttribute('tabindex', '-1');
 
         // // Update UI with latest state
         // await updateUI(state);
@@ -755,6 +757,8 @@ class ContentManager {
 
         this.currentSection = null;
         document.getElementById('modalMenu')?.classList.remove('visible');
+        document.getElementById('modalMenu')?.setAttribute('aria-hidden', 'true');
+        document.getElementById('modalMenu')?.setAttribute('tabindex', '-1');
     }
 
     showMainContent() {
@@ -804,12 +808,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     kebabButton?.addEventListener('click', (e) => {
         e.stopPropagation();
-        modalMenu?.classList.toggle('visible');
+        const isVisible = modalMenu?.classList.contains('visible');
+
+        if (isVisible) {
+            modalMenu?.classList.remove('visible');
+            modalMenu?.setAttribute('aria-hidden', 'true');
+            modalMenu?.setAttribute('tabindex', '-1');
+        } else {
+            modalMenu?.classList.add('visible');
+            modalMenu?.setAttribute('aria-hidden', 'false');
+            modalMenu?.setAttribute('tabindex', '0');
+            // Focus first menu item
+            const firstMenuItem = modalMenu?.querySelector('.menu-item');
+            if (firstMenuItem) {
+                firstMenuItem.focus();
+            }
+        }
     });
 
     document.addEventListener('click', (e) => {
         if (modalMenu && !modalMenu.contains(e.target) && e.target !== kebabButton) {
             modalMenu.classList.remove('visible');
+            modalMenu.setAttribute('aria-hidden', 'true');
+            modalMenu.setAttribute('tabindex', '-1');
         }
     });
 
