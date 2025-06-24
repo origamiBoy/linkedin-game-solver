@@ -9,6 +9,14 @@ const CellState = {
     SUN: 'sun'
 };
 
+// aria labels for the alternate themed cells
+const ThemedCellState = [
+    {
+        MOON: 'Heels',
+        SUN: 'Sara Blakely'
+    }
+];
+
 const EdgeState = {
     EMPTY: 'empty',
     EQUAL: 'equal',
@@ -100,6 +108,17 @@ class TangoSolver {
                 } else if (cell.querySelector('.lotka-cell-content #Sun')) {
                     state.board[row][col].contains = CellState.SUN;
                 }
+                else {
+                    // themed cells
+                    for (const themedCell of ThemedCellState) {
+                        if (cell.querySelector(`.lotka-cell-content [aria-label="${themedCell.MOON}"]`)) {
+                            state.board[row][col].contains = CellState.MOON;
+                        } else if (cell.querySelector(`.lotka-cell-content [aria-label="${themedCell.SUN}"]`)) {
+                            state.board[row][col].contains = CellState.SUN;
+                        }
+                    }
+                }
+
 
                 // Parse right edge (horizontal edge)
                 const rightEdge = cell.querySelector('.lotka-cell-edge.lotka-cell-edge--right');

@@ -15,6 +15,13 @@ const CellState = {
     SUN: 'sun'
 };
 
+const ThemedCellState = [
+    {
+        MOON: 'Heels',
+        SUN: 'Sara Blakely'
+    }
+];
+
 const EdgeState = {
     EMPTY: 'empty',
     EQUAL: 'equal',
@@ -111,7 +118,7 @@ class TangoSolver {
 
     async parseBoardState() {
         console.log('Parsing board state...');
-        const state = await this.page.evaluate((boardSize) => {
+        const state = await this.page.evaluate(({ boardSize, themedCellState }) => {
             // Create 2D arrays for board and edges
             const board = Array(boardSize).fill().map(() => Array(boardSize).fill().map(() => ({ contains: 'empty' })));
             const edges = {
@@ -145,6 +152,16 @@ class TangoSolver {
                     } else if (cell.querySelector('.lotka-cell-content #Sun')) {
                         board[row][col].contains = 'sun';
                     }
+                    else {
+                        // themed cells
+                        for (const themedCell of themedCellState) {
+                            if (cell.querySelector(`.lotka-cell-content [aria-label="${themedCell.MOON}"]`)) {
+                                board[row][col].contains = 'moon';
+                            } else if (cell.querySelector(`.lotka-cell-content [aria-label="${themedCell.SUN}"]`)) {
+                                board[row][col].contains = 'sun';
+                            }
+                        }
+                    }
 
                     // Parse right edge (horizontal edge)
                     const rightEdge = cell.querySelector('.lotka-cell-edge.lotka-cell-edge--right');
@@ -173,7 +190,7 @@ class TangoSolver {
             }
 
             return { board, edges };
-        }, BOARD_SIZE);
+        }, { boardSize: BOARD_SIZE, themedCellState: ThemedCellState });
 
         // Create a proper deep copy of the state
         this.baseGameState = JSON.parse(JSON.stringify(state));
