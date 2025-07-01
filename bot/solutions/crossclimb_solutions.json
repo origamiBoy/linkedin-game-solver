@@ -2,32 +2,32 @@
   "middleSolutions": [
     {
       "final_order": 0,
-      "word": "crime"
-    },
-    {
-      "final_order": 2,
-      "word": "chile"
+      "word": "pius"
     },
     {
       "final_order": 1,
-      "word": "chime"
+      "word": "pits"
     },
     {
-      "final_order": 4,
-      "word": "whale"
+      "final_order": 2,
+      "word": "sits"
     },
     {
       "final_order": 3,
-      "word": "while"
+      "word": "sith"
+    },
+    {
+      "final_order": 4,
+      "word": "sigh"
     }
   ],
   "rearrangedChain": [
-    "prime",
-    "crime",
-    "chime",
-    "chile",
-    "while",
-    "whale",
-    "whole"
+    "plus",
+    "pius",
+    "pits",
+    "sits",
+    "sith",
+    "sigh",
+    "sign"
   ]
 }

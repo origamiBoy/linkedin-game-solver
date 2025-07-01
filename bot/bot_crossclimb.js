@@ -397,6 +397,31 @@ class CrossclimbSolver {
         return true;
     }
 
+    async middleCluesCheckReversed(solutions) {
+        const firstWord = solutions.find(s => s.final_order === 0).word;
+        const lastWord = solutions.find(s => s.final_order === solutions.length - 1).word;
+
+        const inputtedFirstWord = await this.page.evaluate(() => {
+            const container = document.querySelector('.crossclimb__guess__container .crossclimb__guess--middle:nth-child(2)');
+            const inputs = container.querySelectorAll('.crossclimb__guess_box input');
+            return Array.from(inputs).map(input => input.value).join('');
+        });
+
+        if (inputtedFirstWord === firstWord) {
+            return false;
+        } else if (inputtedFirstWord === lastWord) {
+            // If reversed, reverse solution values
+            solutions.forEach(solution => {
+                solution.final_order = solutions.length - solution.final_order - 1;
+            });
+            solutions.sort((a, b) => a.final_order - b.final_order);
+            return true;
+        } else {
+            // Error, does not match expected word values
+            return false;
+        }
+    }
+
     async middleCluesRearrange(solutions) {
         console.log('Rearranging middle clues solution...');
 
@@ -405,6 +430,18 @@ class CrossclimbSolver {
 
         // Rearrange words according to final_order
         const sortedSolutions = [...solutionsCopy].sort((a, b) => a.final_order - b.final_order);
+
+        // if solution is naturally correct (might be in reversed order)
+        if (JSON.stringify(solutionsCopy) == JSON.stringify(sortedSolutions)) {
+            const reversed = await this.middleCluesCheckReversed(solutions);
+            if (reversed) {
+                console.log('Step 4 complete: Middle clues solution inputted (reversed and correct).');
+            }
+            else {
+                console.log('Step 4 complete: Middle clues solution inputted (rearrange not needed).');
+            }
+            return;
+        }
 
         for (let i = 0; i < sortedSolutions.length; i++) {
             const currentIndex = solutionsCopy.findIndex(s => s.final_order === sortedSolutions[i].final_order);
@@ -430,7 +467,7 @@ class CrossclimbSolver {
 
     async middleClueCheckSolution() {
         // for animation to complete
-        await this.page.waitForTimeout(2000);
+        await this.page.waitForTimeout(3000);
         const isComplete = await this.page.evaluate(() => {
             const clue = document.querySelector('.crossclimb__clue');
             return clue.id === 'crossclimb-clue-section-0';

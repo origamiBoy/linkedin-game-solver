@@ -366,12 +366,44 @@ class CrossclimbSolver {
         return true;
     }
 
+    async middleCluesCheckReversed(solutions) {
+        if (this.shouldStop) {
+            return { success: false, error: "Solving stopped by user" };
+        }
+        const firstWord = solutions.find(s => s.final_order === 0).word;
+        const lastWord = solutions.find(s => s.final_order === solutions.length - 1).word;
+
+        const container = document.querySelector('.crossclimb__guess__container .crossclimb__guess--middle:nth-child(2)');
+        const inputs = container.querySelectorAll('.crossclimb__guess_box input');
+        const inputtedFirstWord = Array.from(inputs).map(input => input.value).join('');
+
+        if (inputtedFirstWord === firstWord) {
+            return false;
+        } else if (inputtedFirstWord === lastWord) {
+            // If reversed, reverse solution values
+            solutions.forEach(solution => {
+                solution.final_order = solutions.length - solution.final_order - 1;
+            });
+            solutions.sort((a, b) => a.final_order - b.final_order);
+            return true;
+        } else {
+            // Error, does not match expected word values
+            return false;
+        }
+    }
+
     async middleCluesRearrange(solutions) {
         if (this.shouldStop) {
             return { success: false, error: "Solving stopped by user" };
         }
         const solutionsCopy = JSON.parse(JSON.stringify(solutions));
         const sortedSolutions = [...solutionsCopy].sort((a, b) => a.final_order - b.final_order);
+
+        // if solution is naturally correct (might be in reversed order)
+        if (JSON.stringify(solutionsCopy) == JSON.stringify(sortedSolutions)) {
+            await this.middleCluesCheckReversed(solutions);
+            return;
+        }
 
         for (let i = 0; i < sortedSolutions.length; i++) {
             if (this.shouldStop) {
@@ -430,7 +462,7 @@ class CrossclimbSolver {
         if (this.shouldStop) {
             return { success: false, error: "Solving stopped by user" };
         }
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
         const clue = document.querySelector('.crossclimb__clue');
         return clue && clue.id === 'crossclimb-clue-section-0';
     }
