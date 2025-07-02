@@ -200,6 +200,9 @@ class CrossclimbSolver {
                 case 5:
                     exampleDisplay = 'click sling cling clink cluck';
                     break;
+                case 6:
+                    exampleDisplay = "latter hatter halter walter waiter";
+                    break;
                 default:
                     break;
             }

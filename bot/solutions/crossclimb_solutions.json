@@ -2,32 +2,32 @@
   "middleSolutions": [
     {
       "final_order": 0,
-      "word": "pius"
+      "word": "latter"
     },
     {
       "final_order": 1,
-      "word": "pits"
+      "word": "hatter"
     },
     {
       "final_order": 2,
-      "word": "sits"
+      "word": "halter"
     },
     {
       "final_order": 3,
-      "word": "sith"
+      "word": "walter"
     },
     {
       "final_order": 4,
-      "word": "sigh"
+      "word": "waiter"
     }
   ],
   "rearrangedChain": [
-    "plus",
-    "pius",
-    "pits",
-    "sits",
-    "sith",
-    "sigh",
-    "sign"
+    "letter",
+    "latter",
+    "hatter",
+    "halter",
+    "walter",
+    "waiter",
+    "writer"
   ]
 }
