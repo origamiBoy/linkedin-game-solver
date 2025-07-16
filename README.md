@@ -12,7 +12,7 @@ A collection of automated solvers for all of the LinkedIn games including Queens
 - Pinpoint puzzle solver
 - Crossclimb puzzle solver
 
-![LinkedIn Game Solver Browser Extension User Interface](user_interface.png)
+![LinkedIn Game Solver Browser Extension User Interface](icons/user_interface.png)
 
 ## Prerequisites
 
