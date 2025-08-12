@@ -1,17 +1,17 @@
 # LinkedIn Solver
 
-A collection of automated solvers for all of the LinkedIn games including Queens, Zip, Tango, Pinpoint, and Crossclimb. There are two versions for each solver, a Chrome browser extension using HTML, CSS, and JS, and stand alone browser automation scripts using Playwright. Used OpenAI for puzzle solving where applicable.
+A collection of automated solvers for all of the LinkedIn games including Mini Sudoku, Queens, Zip, Tango, Pinpoint, and Crossclimb. There are two versions for each solver, a Chrome browser extension using HTML, CSS, and JS, and stand alone browser automation scripts using Playwright. Used OpenAI for puzzle solving where applicable.
 
 ## Features
 
 - Chrome browser extension
 - Stand alone scripts for solving each puzzle
+- Mini Sudoku puzzle solver
 - Queens puzzle solver
 - Zip puzzle solver
 - Tango puzzle solver
 - Pinpoint puzzle solver
 - Crossclimb puzzle solver
-- Mini Sudoku puzzle solver
 
 ![LinkedIn Game Solver Browser Extension User Interface](icons/user_interface.png)
 
@@ -52,6 +52,11 @@ The project includes a Chrome extension that can be used to solve puzzles direct
 ## Script Usage
 
 Each puzzle solver can be run using npm scripts:
+
+### Mini Sudoku Solver
+```bash
+npm run start:mini-sudoku
+```
 
 ### Queens Solver
 ```bash
@@ -96,11 +101,6 @@ npm run start:crossclimb:direct
 
 # Default solver (Get)
 npm run start:crossclimb
-```
-
-### Mini Sudoku Solver
-```bash
-npm run start:mini-sudoku
 ```
 
 ## How it Works
