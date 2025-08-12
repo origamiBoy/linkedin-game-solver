@@ -23,7 +23,9 @@ importScripts('game_config_sw.js');
 
 // Helper function to get game URL
 function getGameUrl(gameType) {
-    return self.GAME_CONFIG[gameType.toLowerCase()]?.url;
+    // Convert hyphens to underscores to match the game config keys
+    const normalizedGameType = gameType.toLowerCase().replace(/-/g, '_');
+    return self.GAME_CONFIG[normalizedGameType]?.url;
 }
 
 // OpenAI API key should be stored in extension's storage
@@ -149,10 +151,12 @@ function detectGameType(url) {
         return;
     }
 
-    // Check each game's ID in the URL path
+    // Check each game's ID in the URL path, normalizing hyphens to underscores
     for (const [gameId, gameConfig] of Object.entries(self.GAME_CONFIG)) {
-        if (url.includes(`${gameId}`)) {
-            state.gameType = gameConfig.name;
+        // Convert gameId underscores to hyphens for URL matching
+        const urlPattern = gameId.replace(/_/g, '-');
+        if (url.includes(urlPattern)) {
+            state.gameType = gameId; // Store the game ID
             return;
         }
     }

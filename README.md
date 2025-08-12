@@ -11,6 +11,7 @@ A collection of automated solvers for all of the LinkedIn games including Queens
 - Tango puzzle solver
 - Pinpoint puzzle solver
 - Crossclimb puzzle solver
+- Mini Sudoku puzzle solver
 
 ![LinkedIn Game Solver Browser Extension User Interface](icons/user_interface.png)
 
@@ -97,9 +98,14 @@ npm run start:crossclimb:direct
 npm run start:crossclimb
 ```
 
+### Mini Sudoku Solver
+```bash
+npm run start:mini-sudoku
+```
+
 ## How it Works
 
-### Queens/Zip/Tango Solver
+### Queens/Zip/Tango/Mini Sudoku Solver
 - Parses the board for current configuration
 - Uses depth-first search to find puzzle solutions
 - Automatically clicks appropriate cells to input solution

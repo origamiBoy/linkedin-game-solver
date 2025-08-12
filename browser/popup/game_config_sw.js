@@ -1,5 +1,33 @@
 // Game configuration object for service worker
 const GAME_CONFIG = {
+    mini_sudoku: {
+        name: "Mini Sudoku",
+        url: "https://www.linkedin.com/games/view/mini-sudoku/desktop/",
+        icon: {
+            normal: "../../icons/game/mini_sudoku.svg",
+            solved: "../../icons/game/mini_sudoku_solved.svg"
+        },
+        backgroundColor: "#d6faee",
+        tags: {
+            perfect: true,
+            ai: false
+        },
+        tagline: "The classic game, made mini",
+        about: "A mini sudoku puzzle in a 2 by 3 grid. Algrimthimcally solved.",
+        controls: [
+            {
+                name: "Solve",
+                id: "solve-button",
+                icon: "play_arrow",
+                description: "Solves the puzzle. Simple as that.",
+                solveAction: "solve",
+                requirements: {
+                    ai: false,
+                    stored: false
+                }
+            }
+        ]
+    },
     queens: {
         name: "Queens",
         url: "https://www.linkedin.com/games/view/queens/desktop/",
