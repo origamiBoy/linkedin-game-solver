@@ -3,6 +3,7 @@ const GAME_CONFIG = {
     mini_sudoku: {
         name: "Mini Sudoku",
         url: "https://www.linkedin.com/games/view/mini-sudoku/desktop/",
+        urlPattern: "sudoku",
         icon: {
             normal: "../../icons/game/mini_sudoku.svg",
             solved: "../../icons/game/mini_sudoku_solved.svg"
@@ -13,7 +14,7 @@ const GAME_CONFIG = {
             ai: false
         },
         tagline: "The classic game, made mini",
-        about: "A mini sudoku puzzle in a 2 by 3 grid. Algrimthimcally solved.",
+        about: "A mini sudoku puzzle in a 2 by 3 grid. Algorithmically solved.",
         controls: [
             {
                 name: "Solve",
@@ -31,6 +32,7 @@ const GAME_CONFIG = {
     queens: {
         name: "Queens",
         url: "https://www.linkedin.com/games/view/queens/desktop/",
+        urlPattern: "queens", // Single pattern for URL detection
         icon: {
             normal: "../../icons/game/queens.svg",
             solved: "../../icons/game/queens_solved.svg"
@@ -41,7 +43,7 @@ const GAME_CONFIG = {
             ai: false
         },
         tagline: "Crown each region",
-        about: "A logic puzzle where no queens can attack each other. Algrimthimcally solved.",
+        about: "A logic puzzle where no queens can attack each other. Algorithmically solved.",
         controls: [
             {
                 name: "Solve",
@@ -59,6 +61,7 @@ const GAME_CONFIG = {
     zip: {
         name: "Zip",
         url: "https://www.linkedin.com/games/view/zip/desktop/",
+        urlPattern: "zip", // Single pattern for URL detection
         icon: {
             normal: "../../icons/game/zip.svg",
             solved: "../../icons/game/zip_solved.svg"
@@ -69,7 +72,7 @@ const GAME_CONFIG = {
             ai: false
         },
         tagline: "Complete the path",
-        about: "Connect all the dots with a single line and use all grid cells. Algrimthimcally solved.",
+        about: "Connect all the dots with a single line and use all grid cells. Algorithmically solved.",
         controls: [
             {
                 name: "Solve",
@@ -87,6 +90,7 @@ const GAME_CONFIG = {
     tango: {
         name: "Tango",
         url: "https://www.linkedin.com/games/view/tango/desktop/",
+        urlPattern: "tango", // Single pattern for URL detection
         icon: {
             normal: "../../icons/game/tango.svg",
             solved: "../../icons/game/tango_solved.svg"
@@ -97,7 +101,7 @@ const GAME_CONFIG = {
             ai: false
         },
         tagline: "Harmonize the grid",
-        about: "Fill the grid with moons and suns. Algrimthimcally solved.",
+        about: "Fill the grid with moons and suns. Algorithmically solved.",
         controls: [
             {
                 name: "Solve",
@@ -115,6 +119,7 @@ const GAME_CONFIG = {
     pinpoint: {
         name: "Pinpoint",
         url: "https://www.linkedin.com/games/view/pinpoint/desktop/",
+        urlPattern: "pinpoint", // Single pattern for URL detection
         icon: {
             normal: "../../icons/game/pinpoint.svg",
             solved: "../../icons/game/pinpoint_solved.svg"
@@ -166,6 +171,7 @@ const GAME_CONFIG = {
     crossclimb: {
         name: "Crossclimb",
         url: "https://www.linkedin.com/games/view/crossclimb/desktop/",
+        urlPattern: "crossclimb", // Single pattern for URL detection
         icon: {
             normal: "../../icons/game/crossclimb.svg",
             solved: "../../icons/game/crossclimb_solved.svg"

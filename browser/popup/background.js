@@ -151,11 +151,9 @@ function detectGameType(url) {
         return;
     }
 
-    // Check each game's ID in the URL path, normalizing hyphens to underscores
+    // Check each game's urlPattern for URL matching
     for (const [gameId, gameConfig] of Object.entries(self.GAME_CONFIG)) {
-        // Convert gameId underscores to hyphens for URL matching
-        const urlPattern = gameId.replace(/_/g, '-');
-        if (url.includes(urlPattern)) {
+        if (gameConfig.urlPattern && url.includes(gameConfig.urlPattern)) {
             state.gameType = gameId; // Store the game ID
             return;
         }
