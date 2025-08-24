@@ -20,7 +20,7 @@ const GAME_CONFIG = {
                 name: "Solve",
                 id: "solve-button",
                 icon: "play_arrow",
-                description: "Solves the puzzle. Simple as that.",
+                description: "Solves the puzzle. Unable to save scores.",
                 solveAction: "solve",
                 requirements: {
                     ai: false,
@@ -44,16 +44,28 @@ const GAME_CONFIG = {
         },
         tagline: "Crown each region",
         about: "A logic puzzle where no queens can attack each other. Algorithmically solved.",
+        storageKey: "queensSolution",
         controls: [
             {
                 name: "Solve",
                 id: "solve-button",
                 icon: "play_arrow",
-                description: "Solves the puzzle. Simple as that.",
+                description: "Solves the puzzle and saves solution",
                 solveAction: "solve",
                 requirements: {
                     ai: false,
                     stored: false
+                }
+            },
+            {
+                name: "Input Stored",
+                id: "input-stored-button",
+                icon: "input",
+                description: "Input a previously stored solution",
+                solveAction: "inputStoredSolution",
+                requirements: {
+                    ai: false,
+                    stored: true
                 }
             }
         ]
@@ -73,16 +85,28 @@ const GAME_CONFIG = {
         },
         tagline: "Complete the path",
         about: "Connect all the dots with a single line and use all grid cells. Algorithmically solved.",
+        storageKey: "zipSolution",
         controls: [
             {
                 name: "Solve",
                 id: "solve-button",
                 icon: "play_arrow",
-                description: "Solves the puzzle. Simple as that.",
+                description: "Solves the puzzle and saves solution",
                 solveAction: "solve",
                 requirements: {
                     ai: false,
                     stored: false
+                }
+            },
+            {
+                name: "Input Stored",
+                id: "input-stored-button",
+                icon: "input",
+                description: "Input a previously stored solution",
+                solveAction: "inputStoredSolution",
+                requirements: {
+                    ai: false,
+                    stored: true
                 }
             }
         ]
@@ -102,16 +126,28 @@ const GAME_CONFIG = {
         },
         tagline: "Harmonize the grid",
         about: "Fill the grid with moons and suns. Algorithmically solved.",
+        storageKey: "tangoSolution",
         controls: [
             {
                 name: "Solve",
                 id: "solve-button",
                 icon: "play_arrow",
-                description: "Solves the puzzle. Simple as that.",
+                description: "Solves the puzzle and saves solution",
                 solveAction: "solve",
                 requirements: {
                     ai: false,
                     stored: false
+                }
+            },
+            {
+                name: "Input Stored",
+                id: "input-stored-button",
+                icon: "input",
+                description: "Input a previously stored solution",
+                solveAction: "inputStoredSolution",
+                requirements: {
+                    ai: false,
+                    stored: true
                 }
             }
         ]

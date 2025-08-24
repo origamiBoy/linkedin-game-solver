@@ -421,6 +421,79 @@ class ZipSolver {
         if (this.shouldStop) return false;
         return true;
     }
+
+    async saveSolution(solution) {
+        try {
+            // Save the solution to Chrome storage
+            await chrome.storage.local.set({
+                'zipSolution': {
+                    solution: solution,
+                    boardSize: BOARD_SIZE
+                }
+            });
+            return true;
+        } catch (error) {
+            console.error('Error saving solution:', error);
+            return false;
+        }
+    }
+
+    async getMostRecentSolution() {
+        try {
+            const data = await chrome.storage.local.get('zipSolution');
+            const storedSolution = data.zipSolution;
+
+            if (!storedSolution || !storedSolution.solution) {
+                return null;
+            }
+
+            return storedSolution;
+        } catch (error) {
+            console.error('Error reading solution:', error);
+            return null;
+        }
+    }
+
+    async inputStoredSolution() {
+        // Get the most recent solution from storage
+        const storedSolution = await this.getMostRecentSolution();
+        if (!storedSolution) {
+            return {
+                success: false,
+                error: 'No stored solution found'
+            };
+        }
+
+        // Check if board size matches
+        if (storedSolution.boardSize !== BOARD_SIZE) {
+            return {
+                success: false,
+                error: `Board size doesn't match`
+            };
+        }
+
+        // Input the stored solution
+        const inputSuccess = await this.inputSolution(storedSolution.solution);
+        if (inputSuccess) {
+            return {
+                success: true,
+                solution: storedSolution.solution,
+                timestamp: storedSolution.timestamp
+            };
+        } else {
+            if (this.shouldStop) {
+                return {
+                    success: false,
+                    error: 'Solving stopped by user'
+                };
+            } else {
+                return {
+                    success: false,
+                    error: 'Failed to input solution'
+                };
+            }
+        }
+    }
 }
 
 // Global reference to active solver
@@ -428,7 +501,7 @@ let activeSolver = null;
 
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === 'solve' || request.action === 'close') {
+    if (request.action === 'solve' || request.action === 'inputStoredSolution' || request.action === 'close') {
         (async () => {
             try {
                 // If close action, stop any active solver
@@ -457,40 +530,94 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     return;
                 }
 
-                // Create new solver for solve action
-                const solver = new ZipSolver();
-                activeSolver = solver;
-                await solver.initialize();
+                let result;
+                if (request.action === 'solve') {
+                    // Create new solver for solve action
+                    const solver = new ZipSolver();
+                    activeSolver = solver;
+                    await solver.initialize();
 
-                const state = await solver.parseBoardState();
-                solver.baseGameState = state;
-                solver.simulatedGameState = {
-                    board: JSON.parse(JSON.stringify(state.board)),
-                    edges: state.edges
-                };
+                    const state = await solver.parseBoardState();
+                    solver.baseGameState = state;
+                    solver.simulatedGameState = {
+                        board: JSON.parse(JSON.stringify(state.board)),
+                        edges: state.edges
+                    };
 
-                const solution = solver.solvePuzzle();
-                const inputResult = await solver.inputSolution(solution);
+                    const solution = solver.solvePuzzle();
+                    if (!solution) {
+                        result = {
+                            success: false,
+                            error: 'Solving stopped by user'
+                        };
+                    } else {
+                        const inputResult = await solver.inputSolution(solution);
+                        if (inputResult) {
+                            // Save the solution
+                            await solver.saveSolution(solution);
+                            result = {
+                                success: true,
+                                solution: solution
+                            };
+                        } else {
+                            if (solver.shouldStop) {
+                                result = {
+                                    success: false,
+                                    error: 'Solving stopped by user'
+                                };
+                            }
+                            else {
+                                result = {
+                                    success: false,
+                                    error: 'Failed to input solution'
+                                };
+                            }
+                        }
+                    }
+                } else if (request.action === 'inputStoredSolution') {
+                    // Create new solver for input stored solution action
+                    const solver = new ZipSolver();
+                    activeSolver = solver;
+                    await solver.initialize();
+
+                    // Parse board state to get board size
+                    const state = await solver.parseBoardState();
+                    solver.baseGameState = state;
+
+                    result = await solver.inputStoredSolution();
+                }
 
                 // Clear active solver reference after completion
                 activeSolver = null;
 
                 // If input was stopped and failed
-                if (!inputResult) {
-                    chrome.runtime.sendMessage({
-                        action: 'solveComplete',
-                        success: false,
-                        result: { message: 'Closed Execution' }
-                    });
+                if (!result.success) {
+                    if (result.error === 'Solving stopped by user') {
+                        chrome.runtime.sendMessage({
+                            action: 'solveComplete',
+                            success: false,
+                            result: { message: 'Closed Execution' }
+                        });
+                    } else {
+                        chrome.runtime.sendMessage({
+                            action: 'solveComplete',
+                            success: false,
+                            result: { error: result.error }
+                        });
+                    }
                     sendResponse({ success: true });
                     return;
                 }
 
-                // Send success message
-                chrome.runtime.sendMessage({
-                    action: 'solveComplete',
-                    success: true
-                });
+                // Only send success message if we actually solved it
+                else if (result.success) {
+                    chrome.runtime.sendMessage({
+                        action: 'solveComplete',
+                        success: true
+                    });
+                    sendResponse({ success: true });
+                    return;
+                }
 
                 // Send response to popup
                 sendResponse({ success: true });

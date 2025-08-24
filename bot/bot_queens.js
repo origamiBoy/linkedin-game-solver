@@ -1,5 +1,7 @@
 const { chromium } = require('playwright');
 const chalk = require('chalk');
+const fs = require('fs');
+const path = require('path');
 
 // Game URL
 const GAME_URL = 'https://www.linkedin.com/games/view/queens/desktop/';
@@ -65,6 +67,7 @@ class QueensSolver {
         this.page = null;
         this.baseGameState = [];
         this.simulatedGameState = [];
+        this.solutionsFile = path.join(__dirname, 'solutions', 'queens_solutions.json');
     }
 
     async initialize() {
@@ -376,22 +379,106 @@ class QueensSolver {
     }
 
     async inputSolution(solution) {
-        console.log('Inputting solution...');
+        try {
+            console.log('Inputting solution...');
 
-        // Find only new queen placements
-        const newQueens = solution.filter(([row, col]) =>
-            this.baseGameState[row][col].contains !== CellState.QUEEN
-        );
+            // Find only new queen placements
+            const newQueens = solution.filter(([row, col]) =>
+                this.baseGameState[row][col].contains !== CellState.QUEEN
+            );
 
-        // Click cells to place queens
-        for (const [row, col] of newQueens) {
-            const cell = await this.page.$(`#queens-grid .queens-cell-with-border:nth-child(${row * BOARD_SIZE + col + 1})`);
-            await cell.click();
-            await cell.click(); // Double click to place queen
-            await this.page.waitForTimeout(10); // Small delay between clicks
+            // Click cells to place queens
+            for (const [row, col] of newQueens) {
+                const cell = await this.page.$(`#queens-grid .queens-cell-with-border:nth-child(${row * BOARD_SIZE + col + 1})`);
+                await cell.click();
+                await cell.click(); // Double click to place queen
+                await this.page.waitForTimeout(10); // Small delay between clicks
+            }
+
+            console.log('Step 4 complete: Solution inputted.');
+            return true;
+        } catch (error) {
+            console.error('Error inputting solution:', error);
+            return false;
+        }
+    }
+
+    saveSolution(solution) {
+        try {
+            console.log(`Saving solution...`);
+            const solutionData = {
+                solution: solution,
+                boardSize: BOARD_SIZE
+            };
+
+            // Ensure solutions directory exists
+            const solutionsDir = path.dirname(this.solutionsFile);
+            if (!fs.existsSync(solutionsDir)) {
+                fs.mkdirSync(solutionsDir, { recursive: true });
+            }
+
+            fs.writeFileSync(this.solutionsFile, JSON.stringify(solutionData, null, 2));
+            console.log('Solution saved successfully');
+        } catch (error) {
+            console.error('Error saving solution:', error);
+        }
+    }
+
+    getMostRecentSolution() {
+        try {
+            if (!fs.existsSync(this.solutionsFile)) {
+                return null;
+            }
+
+            const data = fs.readFileSync(this.solutionsFile, 'utf8');
+            const solutionData = JSON.parse(data);
+
+            if (!solutionData.solution) {
+                return null;
+            }
+
+            return solutionData;
+        } catch (error) {
+            console.error('Error reading solution:', error);
+            return null;
+        }
+    }
+
+    async inputStoredSolution() {
+        // Get the most recent solution
+        const storedSolution = this.getMostRecentSolution();
+        if (!storedSolution) {
+            console.log('No stored solution found');
+            return {
+                success: false,
+                error: 'No stored solution found'
+            };
         }
 
-        console.log('Step 4 complete: Solution inputted and saved from clipboard.');
+        // Check if board size matches
+        if (storedSolution.boardSize !== BOARD_SIZE) {
+            console.log(`Stored solution board size (${storedSolution.boardSize}) doesn't match current board size (${BOARD_SIZE})`);
+            return {
+                success: false,
+                error: 'Board size mismatch'
+            };
+        }
+
+        // Input the stored solution
+        const inputSuccess = await this.inputSolution(storedSolution.solution);
+        if (inputSuccess) {
+            console.log('Stored solution inputted successfully');
+            return {
+                success: true,
+                solution: storedSolution.solution
+            };
+        } else {
+            console.log('Failed to input stored solution');
+            return {
+                success: false,
+                error: 'Failed to input solution'
+            };
+        }
     }
 
     async cleanup() {
@@ -407,9 +494,28 @@ async function main() {
     const solver = new QueensSolver();
     try {
         await solver.initialize();
-        await solver.parseBoardState();
-        const solution = solver.solvePuzzle();
-        await solver.inputSolution(solution);
+
+        // Get command line arguments
+        const args = process.argv.slice(2);
+        const useStoredSolution = args.includes('--stored-solution') || args.includes('-s');
+        const getSolution = args.includes('--get-solution') || args.includes('-g');
+
+        if (useStoredSolution) {
+            console.log('Using stored solution...');
+            await solver.parseBoardState();
+            console.log('Step 3 Skipped: Already Solved.');
+            const result = await solver.inputStoredSolution();
+            if (!result.success) {
+                console.error('Error:', result.error);
+            }
+        } else {
+            console.log('Solving puzzle...');
+            await solver.parseBoardState();
+            const solution = solver.solvePuzzle();
+            await solver.inputSolution(solution);
+            solver.saveSolution(solution);
+        }
+
         await solver.cleanup();
     } catch (error) {
         console.error('Error:', error);

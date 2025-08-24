@@ -6,7 +6,7 @@ A collection of automated solvers for all of the LinkedIn games including Mini S
 
 - Chrome browser extension
 - Stand alone scripts for solving each puzzle
-- Mini Sudoku puzzle solver
+- Mini Sudoku puzzle solver* (can not save scores)
 - Queens puzzle solver
 - Zip puzzle solver
 - Tango puzzle solver
@@ -60,17 +60,38 @@ npm run start:mini-sudoku
 
 ### Queens Solver
 ```bash
+# Display stored solution (default)
 npm run start:queens
+
+# Use stored solution
+npm run start:queens:stored
+
+# Display stored solution
+npm run start:queens:get
 ```
 
 ### Zip Solver
 ```bash
+# Display stored solution (default)
 npm run start:zip
+
+# Use stored solution
+npm run start:zip:stored
+
+# Display stored solution
+npm run start:zip:get
 ```
 
 ### Tango Solver
 ```bash
+# Display stored solution (default)
 npm run start:tango
+
+# Use stored solution
+npm run start:tango:stored
+
+# Display stored solution
+npm run start:tango:get
 ```
 
 ### Pinpoint Solver
@@ -109,6 +130,8 @@ npm run start:crossclimb
 - Parses the board for current configuration
 - Uses depth-first search to find puzzle solutions
 - Automatically clicks appropriate cells to input solution
+- Queens, Zip, and Tango solvers store successful solutions for future use
+- Can use stored solutions to more quickly input solved puzzles
 
 ### Pinpoint/Crossclimb Solvers
 - Uses OpenAI or hints to analyze and solve word-based puzzles
@@ -124,7 +147,7 @@ npm run start:crossclimb
 - Inputting stored solutions require up-to-date stored solutions
 - Browser extension has stored solutions in local storage along with API key
 - Script solvers automatically close browser tab 5 seconds after finished executing
-- Script solutions are cached in JSON files for future use
+- Script solutions are cached in JSON files for future use (all solvers except Mini Sudoku)
 
 ## Contributing
 
