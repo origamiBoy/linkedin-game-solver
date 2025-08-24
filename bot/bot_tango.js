@@ -4,9 +4,9 @@ const chalk = require('chalk');
 // Game URL
 const GAME_URL = 'https://www.linkedin.com/games/view/tango/desktop/';
 
-// Board dimensions
-const BOARD_SIZE = 6;
-const EDGE_SIZE = BOARD_SIZE - 1;
+// Board dimensions - will be updated dynamically
+let BOARD_SIZE = 6;
+let EDGE_SIZE = BOARD_SIZE - 1;
 
 // Cell and Edge States
 const CellState = {
@@ -77,16 +77,14 @@ class TangoSolver {
     constructor() {
         this.browser = null;
         this.page = null;
-        this.baseGameState = {
-            board: Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill().map(() => ({ contains: CellState.EMPTY }))),
-            edges: {
-                horizontal: Array(BOARD_SIZE).fill().map(() => Array(EDGE_SIZE).fill().map(() => ({ state: EdgeState.EMPTY }))),
-                vertical: Array(EDGE_SIZE).fill().map(() => Array(BOARD_SIZE).fill().map(() => ({ state: EdgeState.EMPTY })))
-            }
+        this.baseGameState =
+        {
+            board: null,
+            edges: null
         };
         this.simulatedGameState = {
-            board: Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill().map(() => ({ contains: CellState.EMPTY }))),
-            edges: null  // Will reference baseGameState.edges
+            board: null,
+            edges: null
         };
     }
 
@@ -112,7 +110,23 @@ class TangoSolver {
 
         // Wait for the board to appear
         await this.page.waitForSelector('.lotka-grid');
-        this.simulatedGameState.edges = this.baseGameState.edges; // Reference the base game's edges
+
+        // Detect board size and update global variables
+        const cellCount = await this.page.$$eval('.lotka-cell', cells => cells.length);
+        BOARD_SIZE = Math.sqrt(cellCount);
+        EDGE_SIZE = BOARD_SIZE - 1;
+
+        // Initialize game state with correct dimensions
+        this.baseGameState = {
+            board: Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill().map(() => ({ contains: CellState.EMPTY }))),
+            edges: {
+                horizontal: Array(BOARD_SIZE).fill().map(() => Array(EDGE_SIZE).fill().map(() => ({ state: EdgeState.EMPTY }))),
+                vertical: Array(EDGE_SIZE).fill().map(() => Array(BOARD_SIZE).fill().map(() => ({ state: EdgeState.EMPTY })))
+            }
+        };
+        this.simulatedGameState.board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill().map(() => ({ contains: CellState.EMPTY })));
+        this.simulatedGameState.edges = this.baseGameState.edges;
+
         console.log('Step 1 complete: Game launched and board loaded.');
     }
 
@@ -122,9 +136,7 @@ class TangoSolver {
             // Create 2D arrays for board and edges
             const board = Array(boardSize).fill().map(() => Array(boardSize).fill().map(() => ({ contains: 'empty' })));
             const edges = {
-                // For 6x6 grid: 6 horizontal edges per row and 6 rows
-                horizontal: Array(boardSize).fill().map(() => Array(boardSize).fill().map(() => ({ state: 'empty' }))),
-                // For 6x6 grid: 6 vertical edges per column and 5 rows
+                horizontal: Array(boardSize).fill().map(() => Array(boardSize - 1).fill().map(() => ({ state: 'empty' }))),
                 vertical: Array(boardSize - 1).fill().map(() => Array(boardSize).fill().map(() => ({ state: 'empty' })))
             };
 

@@ -1,6 +1,6 @@
-// Board dimensions
-const BOARD_SIZE = 6;
-const EDGE_SIZE = BOARD_SIZE - 1;
+// Board dimensions - will be updated dynamically
+let BOARD_SIZE = 6;
+let EDGE_SIZE = BOARD_SIZE - 1;
 
 // Cell and Edge States
 const CellState = {
@@ -26,16 +26,14 @@ const EdgeState = {
 // Main solver class
 class TangoSolver {
     constructor() {
-        this.baseGameState = {
-            board: Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill().map(() => ({ contains: CellState.EMPTY }))),
-            edges: {
-                horizontal: Array(BOARD_SIZE).fill().map(() => Array(EDGE_SIZE).fill().map(() => ({ state: EdgeState.EMPTY }))),
-                vertical: Array(EDGE_SIZE).fill().map(() => Array(BOARD_SIZE).fill().map(() => ({ state: EdgeState.EMPTY })))
-            }
+        this.baseGameState =
+        {
+            board: null,
+            edges: null
         };
         this.simulatedGameState = {
-            board: Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill().map(() => ({ contains: CellState.EMPTY }))),
-            edges: null  // Will reference baseGameState.edges
+            board: null,
+            edges: null
         };
         this.shouldStop = false;
     }
@@ -72,7 +70,21 @@ class TangoSolver {
             throw new Error('Board not found after initialization');
         }
 
-        this.simulatedGameState.edges = this.baseGameState.edges; // Reference the base game's edges
+        // Detect board size and update global variables
+        const cellCount = document.querySelectorAll('.lotka-cell').length;
+        BOARD_SIZE = Math.sqrt(cellCount);
+        EDGE_SIZE = BOARD_SIZE - 1;
+
+        // Initialize game state with correct dimensions
+        this.baseGameState = {
+            board: Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill().map(() => ({ contains: CellState.EMPTY }))),
+            edges: {
+                horizontal: Array(BOARD_SIZE).fill().map(() => Array(EDGE_SIZE).fill().map(() => ({ state: EdgeState.EMPTY }))),
+                vertical: Array(EDGE_SIZE).fill().map(() => Array(BOARD_SIZE).fill().map(() => ({ state: EdgeState.EMPTY })))
+            }
+        };
+        this.simulatedGameState.board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill().map(() => ({ contains: CellState.EMPTY })));
+        this.simulatedGameState.edges = this.baseGameState.edges;
     }
 
     async parseBoardState() {
